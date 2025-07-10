@@ -1,1 +1,0 @@
-https://cuwg234q8g.execute-api.ap-southeast-1.amazonaws.com/prod/analyze

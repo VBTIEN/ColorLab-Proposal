@@ -1,9 +1,0 @@
-ColorLab Comprehensive Test Results
-==================================
-Date: Tue Jul  8 14:23:00 +07 2025
-Image: image_test.jpg (123591 bytes)
-Processing Time: 0 seconds
-Response Size: 8679 characters
-Dominant Colors: 8
-API Version: 15.0.0-colorlab-fixed
-Status: SUCCESS - All tests passed
