@@ -1,0 +1,15 @@
+# ColorLab Requirements
+# Professional Color Analysis Platform
+
+# Core Python Libraries for Lambda Function
+Pillow>=10.0.0          # Advanced image processing
+numpy>=1.24.0           # Numerical computations for color analysis
+boto3>=1.28.0           # AWS SDK for Python (provided by Lambda runtime)
+
+# Development Dependencies (optional)
+pytest>=7.4.0           # Testing framework
+black>=23.7.0           # Code formatting
+flake8>=6.0.0           # Code linting
+
+# Note: For AWS Lambda deployment, only Pillow and numpy are needed
+# boto3 is provided by AWS Lambda runtime
