@@ -1,0 +1,32 @@
+{
+  "project": {
+    "name": "AI Image Analyzer Workshop",
+    "version": "1.0.0",
+    "description": "Workshop về ứng dụng Amazon Q vào phân tích ảnh thông minh",
+    "author": "AWS Solutions Architects"
+  },
+  "aws": {
+    "region": "ap-southeast-1",
+    "account_id": "741448948262",
+    "services": [
+      "rekognition",
+      "bedrock",
+      "lambda",
+      "s3",
+      "apigateway",
+      "iam"
+    ]
+  },
+  "lambda": {
+    "function_name": "ImageAnalyzer",
+    "runtime": "python3.9",
+    "timeout": 30,
+    "memory_size": 512
+  },
+  "s3": {
+    "bucket_prefix": "image-analyzer-workshop"
+  },
+  "bedrock": {
+    "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+  }
+}

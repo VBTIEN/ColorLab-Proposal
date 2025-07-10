@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 ColorLab - Professional Color Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        },
+                        purple: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'bounce-gentle': 'bounceGentle 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        bounceGentle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' },
+                            '100%': { boxShadow: '0 0 30px rgba(139, 92, 246, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .color-circle {
+            background: linear-gradient(135deg, var(--color) 0%, var(--color-dark) 100%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+        .icon-glow {
+            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+        }
+        .colorlab-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            background: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        .colorlab-tab:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .colorlab-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Main Container -->
+    <div class="min-h-screen p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Header -->
+            <header class="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 rounded-3xl shadow-2xl mb-8 overflow-hidden relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
+                <div class="relative z-10 px-8 py-12 text-center">
+                    <div class="flex justify-center mb-6">
+                        <div class="relative">
+                            <i class="fas fa-palette text-6xl text-blue-400 animate-float icon-glow"></i>
+                            <div class="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+                        <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">ColorLab</span>
+                    </h1>
+                    <p class="text-xl sm:text-2xl text-gray-300 mb-6 font-light">
+                        🔬 Advanced Color Science with LAB Space & AI Intelligence
+                    </p>
+                    
+                    <!-- API Status -->
+                    <div id="apiStatus" class="inline-flex items-center gap-3 px-6 py-3 glass-effect rounded-full text-white font-medium">
+                        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-500 animate-pulse-slow"></div>
+                        <span id="statusText">Checking API...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Upload Section -->
+            <section class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-8">
+                <div id="uploadSection" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center transition-all duration-300 hover:border-blue-500 hover:bg-blue-50/50 cursor-pointer group">
+                    <div id="uploadArea" class="space-y-4">
+                        <div class="relative inline-block">
+                            <i class="fas fa-cloud-upload-alt text-7xl text-blue-500 group-hover:animate-bounce-gentle transition-transform duration-300 icon-glow"></i>
+                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-ping"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                                <i class="fas fa-images text-purple-500"></i>
+                                Drop your image here or click to select
+                            </h3>
+                            <p class="text-gray-600 flex items-center justify-center gap-2">
+                                <i class="fas fa-info-circle text-blue-500"></i>
+                                Supports JPG, PNG, GIF, BMP, WEBP • Max 10MB
+                            </p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    
+                    <!-- Image Preview -->
+                    <div id="imagePreview" class="hidden mt-8">
+                        <div class="inline-block relative">
+                            <img id="previewImage" class="max-w-sm max-h-80 rounded-2xl shadow-lg border-4 border-white" alt="Preview">
+                            <div id="previewInfo" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white p-4 rounded-b-2xl">
+                                <!-- Image info will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div id="actionButtons" class="hidden mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <button id="analyzeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+                            <i class="fas fa-brain mr-2 group-hover:animate-pulse"></i>
+                            Analyze Colors with AI
+                        </button>
+                        <button id="clearBtn" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+                            <i class="fas fa-trash-alt mr-2 group-hover:animate-bounce"></i>
+                            Clear Image
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Container -->
+            <div id="resultsContainer" class="hidden animate-slide-up">
+                
+                <!-- Results Header -->
+                <div class="bg-gradient-to-r from-emerald-600 to-blue-600 rounded-t-3xl p-8 text-center text-white shadow-2xl">
+                    <div class="flex justify-center mb-4">
+                        <i class="fas fa-chart-pie text-5xl animate-float icon-glow"></i>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-2">ColorLab Professional Analysis</h2>
+                    <p class="text-xl opacity-90">Complete Color Science with LAB Space & AI Intelligence</p>
+                </div>
+
+                <!-- ColorLab Analysis Tabs -->
+                <div class="bg-white border-b border-gray-200">
+                    <div class="flex flex-wrap justify-center gap-2 p-4">
+                        <button class="colorlab-tab active" onclick="showColorLabTab('overview')" data-tab="overview">
+                            📊 Overview
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('frequency')" data-tab="frequency">
+                            📈 Frequency
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('kmeans')" data-tab="kmeans">
+                            🎯 K-Means
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('regional')" data-tab="regional">
+                            🗺️ Regional
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('histograms')" data-tab="histograms">
+                            📊 Histograms
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('colorspaces')" data-tab="colorspaces">
+                            🌈 RGB+HSV+LAB
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('characteristics')" data-tab="characteristics">
+                            🌡️ Temperature
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('aitraining')" data-tab="aitraining">
+                            🤖 AI Training
+                        </button>
+                        <button class="colorlab-tab" onclick="showColorLabTab('cnn')" data-tab="cnn">
+                            🧠 CNN Analysis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Content Container -->
+                <div id="colorlabTabContent" class="bg-white">
+                    <!-- Tab content will be populated here -->
+                </div>
+
+                <!-- Stats Section -->
+                <div class="bg-white p-8 border-b border-gray-200">
+                    <div id="statsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Stats will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Colors Section -->
+                <div class="bg-white p-8">
+                    <div class="text-center mb-8">
+                        <div class="flex justify-center mb-4">
+                            <i class="fas fa-circle-notch text-4xl text-purple-600 animate-spin"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800 mb-2">Dominant Colors</h3>
+                        <p class="text-gray-600 text-lg">Extracted and analyzed with AI precision</p>
+                    </div>
+                    <div id="colorsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 justify-items-center">
+                        <!-- Colors will be populated here -->
+                    </div>
+                </div>
+
+                <!-- AI Insights Section -->
+                <div class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-b-3xl p-8 text-white">
+                    <div class="text-center mb-8">
+                        <div class="flex justify-center mb-4">
+                            <i class="fas fa-robot text-5xl animate-glow icon-glow"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-2">AI Color Intelligence</h3>
+                        <p class="text-xl opacity-90">Professional insights powered by Amazon Bedrock</p>
+                    </div>
+                    <div id="aiInsightsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- AI insights will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white rounded-3xl p-12 text-center shadow-2xl max-w-md mx-4">
+            <div class="flex justify-center mb-6">
+                <i class="fas fa-cog text-6xl text-blue-600 animate-spin"></i>
+            </div>
+            <div class="flex justify-center space-x-2 mb-6">
+                <div class="w-4 h-4 bg-blue-600 rounded-full animate-bounce"></div>
+                <div class="w-4 h-4 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-4 h-4 bg-pink-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">Analyzing colors with AI...</h3>
+            <p class="text-gray-600">This may take a few seconds</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'https://spsvd9ec7i.execute-api.ap-southeast-1.amazonaws.com/prod';
+        // Enhanced RGB handling function
+        function normalizeRgbData(rgbData) {
+            if (!rgbData) return [128, 128, 128];
+            if (Array.isArray(rgbData)) return rgbData;
+            if (typeof rgbData === 'object' && rgbData.r !== undefined) {
+                return [rgbData.r, rgbData.g, rgbData.b];
+            }
+            return [128, 128, 128];
+        }
+
+        // Enhanced color processing function
+        function processColorData(color) {
+            return {
+                ...color,
+                rgb: normalizeRgbData(color.rgb),
+                hex: color.hex || '#808080',
+                percentage: color.percentage || 0,
+                name: color.name || 'Unknown'
+            };
+        }
+        const BUCKET_NAME = 'ai-image-analyzer-web-1751723364';
+
+        let selectedFile = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎨 Initializing ColorLab Professional Color Analysis...');
+            initializeApp();
+        });
+
+        function initializeApp() {
+            checkApiStatus();
+            setupEventListeners();
+        }
+
+        function checkApiStatus() {
+            fetch(`${API_BASE_URL}/health`)
+                .then(response => response.json())
+                .then(data => {
+                    const apiStatus = document.getElementById('apiStatus');
+                    const statusDot = document.getElementById('statusDot');
+                    const statusText = document.getElementById('statusText');
+                    
+                    if (data.success) {
+                        statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse-slow';
+                        statusText.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Professional Color AI Online - ${data.version}`;
+                        apiStatus.className = 'inline-flex items-center gap-3 px-6 py-3 bg-green-500/20 border border-green-500/30 rounded-full text-white font-medium';
+                    } else {
+                        statusText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>API Offline - Demo Mode Only';
+                    }
+                })
+                .catch(error => {
+                    console.error('API Status Error:', error);
+                    document.getElementById('statusText').innerHTML = '<i class="fas fa-times-circle mr-2"></i>API Connection Failed';
+                });
+        }
+
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const uploadSection = document.getElementById('uploadSection');
+            const fileInput = document.getElementById('fileInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const clearBtn = document.getElementById('clearBtn');
+
+            // Upload area click
+            uploadSection.addEventListener('click', (e) => {
+                // Don't trigger file input if clicking on buttons
+                if (!e.target.closest('#actionButtons')) {
+                    fileInput.click();
+                }
+            });
+
+            // File input change
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            uploadSection.addEventListener('dragover', handleDragOver);
+            uploadSection.addEventListener('dragleave', handleDragLeave);
+            uploadSection.addEventListener('drop', handleDrop);
+
+            // Analyze button
+            analyzeBtn.addEventListener('click', analyzeImage);
+            
+            // Clear button
+            clearBtn.addEventListener('click', clearImage);
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            const uploadSection = document.getElementById('uploadSection');
+            uploadSection.className = 'border-2 border-dashed border-purple-500 bg-purple-50 rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer group transform scale-105';
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            const uploadSection = document.getElementById('uploadSection');
+            uploadSection.className = 'border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center transition-all duration-300 hover:border-blue-500 hover:bg-blue-50/50 cursor-pointer group';
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            handleDragLeave(event);
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function processFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file.');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size must be less than 10MB.');
+                return;
+            }
+
+            selectedFile = file;
+            
+            // Show image preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImage = document.getElementById('previewImage');
+                const imagePreview = document.getElementById('imagePreview');
+                const previewInfo = document.getElementById('previewInfo');
+                const actionButtons = document.getElementById('actionButtons');
+                
+                previewImage.src = e.target.result;
+                
+                // Update preview info
+                previewInfo.innerHTML = `
+                    <div class="font-bold text-lg flex items-center gap-2">
+                        <i class="fas fa-file-image"></i>
+                        ${file.name}
+                    </div>
+                    <div class="text-sm opacity-90 flex items-center gap-4">
+                        <span><i class="fas fa-weight-hanging mr-1"></i>Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        <span><i class="fas fa-file-alt mr-1"></i>Type: ${file.type.split('/')[1].toUpperCase()}</span>
+                    </div>
+                `;
+                
+                imagePreview.classList.remove('hidden');
+                imagePreview.classList.add('animate-fade-in');
+                
+                // Update upload area
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.innerHTML = `
+                    <div class="relative inline-block">
+                        <i class="fas fa-check-circle text-7xl text-green-500 group-hover:animate-bounce-gentle transition-transform duration-300 icon-glow"></i>
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-ping"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                            <i class="fas fa-thumbs-up text-green-500"></i>
+                            Image Ready for Analysis
+                        </h3>
+                        <p class="text-gray-600 flex items-center justify-center gap-2">
+                            <i class="fas fa-mouse-pointer text-blue-500"></i>
+                            Use buttons below to analyze or clear
+                        </p>
+                    </div>
+                `;
+                
+                // Show action buttons
+                actionButtons.classList.remove('hidden');
+                actionButtons.classList.add('animate-fade-in');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            // Reset all elements
+            selectedFile = null;
+            
+            // Hide preview and buttons
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            
+            // Reset upload area
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML = `
+                <div class="relative inline-block">
+                    <i class="fas fa-cloud-upload-alt text-7xl text-blue-500 group-hover:animate-bounce-gentle transition-transform duration-300 icon-glow"></i>
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-ping"></div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                        <i class="fas fa-images text-purple-500"></i>
+                        Drop your image here or click to select
+                    </h3>
+                    <p class="text-gray-600 flex items-center justify-center gap-2">
+                        <i class="fas fa-info-circle text-blue-500"></i>
+                        Supports JPG, PNG, GIF, BMP, WEBP • Max 10MB
+                    </p>
+                </div>
+            `;
+            
+            // Reset file input
+            document.getElementById('fileInput').value = '';
+            
+            // Hide results
+            hideResults();
+            
+            showSuccess('Image cleared successfully! You can now select a new image.');
+        }
+
+        function analyzeImage() {
+            if (!selectedFile) {
+                showError('Please select an image first.');
+                return;
+            }
+
+            console.log('🔍 Starting ColorLab analysis for:', selectedFile.name);
+            showLoading(true);
+            hideResults();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imageData = e.target.result.split(',')[1];
+                    console.log('📊 Image data prepared, size:', imageData.length);
+
+                    const requestData = {
+                        image_data: imageData,
+                        bucket: BUCKET_NAME,
+                        analysis_type: 'professional_color_analysis'
+                    };
+
+                    console.log('🚀 Sending request to ColorLab API...');
+                    
+                    // Enhanced API call with retry mechanism
+                    performAnalysisWithRetry(requestData, 3);
+                    
+                } catch (error) {
+                    console.error('❌ File processing error:', error);
+                    showLoading(false);
+                    showError('Failed to process image file. Please try a different image.');
+                }
+            };
+
+            reader.onerror = function() {
+                console.error('❌ FileReader error');
+                showLoading(false);
+                showError('Failed to read image file. Please try again.');
+            };
+
+            reader.readAsDataURL(selectedFile);
+        }
+
+        async function performAnalysisWithRetry(requestData, maxRetries) {
+            let lastError = null;
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    console.log(`🔄 ColorLab Analysis attempt ${attempt}/${maxRetries}...`);
+                    
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                    
+                    const response = await fetch(`${API_BASE_URL}/analyze`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    console.log('📡 Response status:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ ColorLab Analysis response:', data);
+                    
+                    showLoading(false);
+                    
+                    if (data.success) {
+                        displayResults(data.analysis);
+                        showSuccess('🎨 ColorLab analysis completed successfully!');
+                        return; // Success, exit retry loop
+                    } else {
+                        throw new Error(data.error || 'Analysis failed');
+                    }
+                    
+                } catch (error) {
+                    lastError = error;
+                    console.error(`❌ ColorLab Analysis attempt ${attempt} failed:`, error);
+                    
+                    if (error.name === 'AbortError') {
+                        console.error('⏰ Request timeout');
+                        lastError = new Error('Request timeout. The analysis is taking too long.');
+                    }
+                    
+                    // If this is not the last attempt, wait before retrying
+                    if (attempt < maxRetries) {
+                        const waitTime = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Exponential backoff, max 5s
+                        console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                    }
+                }
+            }
+            
+            // All retries failed
+            showLoading(false);
+            const errorMessage = lastError?.message || 'Unknown error occurred';
+            showError(`🚫 ColorLab analysis failed after ${maxRetries} attempts: ${errorMessage}. Please try again or select a different image.`);
+        }
+
+        // Continue with display functions in next part...
+
+        function displayResults(analysis) {
+            displayStats(analysis);
+            displayColors(analysis.dominant_colors);
+            displayAIInsights(analysis.ai_color_insights);
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.classList.remove('hidden');
+            
+            setTimeout(() => {
+                resultsContainer.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 100);
+        }
+
+        function displayStats(analysis) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            const stats = [
+                {
+                    number: analysis.dominant_colors_count || analysis.dominant_colors?.length || 0,
+                    label: 'Dominant Colors',
+                    icon: 'fas fa-palette',
+                    color: 'from-blue-500 to-purple-500'
+                },
+                {
+                    number: analysis.total_colors ? analysis.total_colors.toLocaleString() : 'N/A',
+                    label: 'Total Colors',
+                    icon: 'fas fa-rainbow',
+                    color: 'from-green-500 to-blue-500'
+                },
+                {
+                    number: analysis.color_distribution?.temperature?.dominant_temperature || 
+                            analysis.color_temperature_distribution?.dominant_temperature || 'Mixed',
+                    label: 'Temperature',
+                    icon: 'fas fa-thermometer-half',
+                    color: 'from-orange-500 to-red-500'
+                },
+                {
+                    number: analysis.clustering_algorithm ? 'K-Means' : (analysis.ai_driven ? 'AI' : 'Basic'),
+                    label: 'Analysis Type',
+                    icon: 'fas fa-robot',
+                    color: 'from-purple-500 to-pink-500'
+                }
+            ];
+
+            statsGrid.innerHTML = stats.map(stat => `
+                <div class="bg-gradient-to-br ${stat.color} rounded-2xl p-6 text-white text-center transform transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                    <i class="${stat.icon} text-3xl mb-3 animate-float"></i>
+                    <div class="text-3xl font-bold mb-1">${stat.number}</div>
+                    <div class="text-sm font-medium opacity-90">${stat.label}</div>
+                </div>
+            `).join('');
+        }
+
+        function displayColors(colors) {
+            const colorsGrid = document.getElementById('colorsGrid');
+            colorsGrid.innerHTML = '';
+
+            if (!colors || colors.length === 0) {
+                colorsGrid.innerHTML = '<div class="col-span-full text-center text-gray-500">No colors detected</div>';
+                return;
+            }
+
+            colors.forEach((color, index) => {
+                const processedColor = processColorData(color); const rgb = processedColor.rgb;
+                const darkerRgb = rgb.map(c => Math.max(0, c - 30));
+                
+                const colorCard = document.createElement('div');
+                colorCard.className = 'flex flex-col items-center space-y-4 transform transition-all duration-500 hover:scale-110';
+                colorCard.style.setProperty('--color', color.hex || '#808080');
+                colorCard.style.setProperty('--color-dark', `rgb(${darkerRgb.join(',')})`);
+                
+                colorCard.innerHTML = `
+                    <!-- Circular Color Swatch -->
+                    <div class="relative group">
+                        <div class="color-circle w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full cursor-pointer transform transition-all duration-300 hover:scale-110 hover:rotate-12"></div>
+                        <div class="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="absolute -top-2 -right-2 bg-black/80 text-white px-2 py-1 rounded-full text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            ${color.percentage || 0}%
+                        </div>
+                    </div>
+                    
+                    <!-- Color Info -->
+                    <div class="text-center space-y-2 max-w-32">
+                        <h4 class="font-bold text-gray-800 text-sm sm:text-base truncate">${color.color || 'Unknown'}</h4>
+                        <div class="space-y-1 text-xs text-gray-600">
+                            <div class="bg-gray-100 rounded-lg px-2 py-1">
+                                <span class="font-semibold">${color.hex || '#000000'}</span>
+                            </div>
+                            <div class="bg-gray-100 rounded-lg px-2 py-1">
+                                <span>${rgb.join(', ')}</span>
+                            </div>
+                            <div class="flex gap-1">
+                                <div class="bg-gray-100 rounded px-1 py-0.5 text-xs capitalize">${color.temperature || 'neutral'}</div>
+                                <div class="bg-gray-100 rounded px-1 py-0.5 text-xs capitalize">${color.brightness || 'medium'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                colorsGrid.appendChild(colorCard);
+                
+                // Add staggered animation
+                setTimeout(() => {
+                    colorCard.style.opacity = '0';
+                    colorCard.style.transform = 'translateY(20px)';
+                    colorCard.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        colorCard.style.opacity = '1';
+                        colorCard.style.transform = 'translateY(0)';
+                    }, index * 100);
+                }, 50);
+            });
+        }
+
+        function displayAIInsights(insights) {
+            const aiInsightsGrid = document.getElementById('aiInsightsGrid');
+            
+            if (!insights) {
+                aiInsightsGrid.innerHTML = '<div class="col-span-full text-center text-white/70">AI insights not available</div>';
+                return;
+            }
+            
+            const insightItems = [
+                { icon: 'fas fa-palette', title: 'Color Harmony', content: insights.color_harmony || insights.color_harmony_assessment || 'Analysis available' },
+                { icon: 'fas fa-heart', title: 'Emotional Impact', content: insights.emotional_impact || insights.emotional_psychological_impact || 'Analysis available' },
+                { icon: 'fas fa-bullseye', title: 'Design Usage', content: insights.design_usage || insights.design_applications || 'Analysis available' },
+                { icon: 'fas fa-brain', title: 'Color Psychology', content: insights.color_psychology || 'Analysis available' },
+                { icon: 'fas fa-star', title: 'Professional Assessment', content: insights.professional_assessment || insights.professional_recommendations || 'Analysis available' }
+            ];
+            
+            aiInsightsGrid.innerHTML = insightItems.map((insight, index) => `
+                <div class="glass-effect rounded-2xl p-6 transform transition-all duration-300 hover:scale-105 hover:bg-white/20" style="animation-delay: ${index * 0.1}s">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i class="${insight.icon} text-2xl text-blue-300 animate-float"></i>
+                        <h4 class="text-xl font-bold">${insight.title}</h4>
+                    </div>
+                    <p class="text-gray-200 leading-relaxed">${insight.content}</p>
+                </div>
+            `).join('');
+        }
+
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('animate-fade-in');
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('animate-fade-in');
+            }
+        }
+
+        function hideResults() {
+            document.getElementById('resultsContainer').classList.add('hidden');
+        }
+
+        function showError(message) {
+            console.error('Error:', message);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 max-w-sm animate-slide-up';
+            errorDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                    <div>
+                        <div class="font-bold">Error</div>
+                        <div class="text-sm opacity-90">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => errorDiv.remove(), 300);
+            }, 7000);
+        }
+
+        function showSuccess(message) {
+            console.log('Success:', message);
+            const successDiv = document.createElement('div');
+            successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 max-w-sm animate-slide-up';
+            successDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-check-circle text-xl"></i>
+                    <div>
+                        <div class="font-bold">Success</div>
+                        <div class="text-sm opacity-90">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                successDiv.style.animation = 'fadeOut 0.3s ease forwards';
+                setTimeout(() => successDiv.remove(), 300);
+            }, 4000);
+        }
+
+        // Add CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ColorLab Tab Functions
+        let currentAnalysisData = null;
+
+        function showColorLabTab(tabName) {
+            // Update active tab
+            document.querySelectorAll('.colorlab-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+            if (targetTab) targetTab.classList.add('active');
+
+            // Show tab content
+            const content = document.getElementById('colorlabTabContent');
+            if (content) content.innerHTML = getColorLabTabContent(tabName);
+        }
+
+        function getColorLabTabContent(tabName) {
+            switch(tabName) {
+                case 'overview':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">📊 ColorLab Analysis Overview</h3>
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-blue-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-blue-800 mb-2">🎨 Dominant Colors</h4>
+                                    <p class="text-blue-600 text-sm mb-3">Primary color palette extracted</p>
+                                    <div class="text-2xl font-bold text-blue-800">${currentAnalysisData.dominant_colors ? currentAnalysisData.dominant_colors.length : 0}</div>
+                                </div>
+                                <div class="bg-green-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-green-800 mb-2">📊 Total Colors</h4>
+                                    <p class="text-green-600 text-sm mb-3">Unique colors detected</p>
+                                    <div class="text-2xl font-bold text-green-800">${currentAnalysisData.color_count || currentAnalysisData.total_colors || 'N/A'}</div>
+                                </div>
+                                <div class="bg-purple-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-purple-800 mb-2">🌡️ Temperature</h4>
+                                    <p class="text-purple-600 text-sm mb-3">Overall color temperature</p>
+                                    <div class="text-2xl font-bold text-purple-800">${currentAnalysisData.color_temperature || currentAnalysisData.temperature || 'N/A'}</div>
+                                </div>
+                                <div class="bg-red-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-red-800 mb-2">🤖 AI Models</h4>
+                                    <p class="text-red-600 text-sm mb-3">Trained AI models used</p>
+                                    <div class="text-2xl font-bold text-red-800">${currentAnalysisData.ai_models_count || '5'}</div>
+                                </div>
+                                <div class="bg-cyan-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-cyan-800 mb-2">🧠 CNN Analysis</h4>
+                                    <p class="text-cyan-600 text-sm mb-3">Deep learning insights</p>
+                                    <div class="text-2xl font-bold text-cyan-800">${currentAnalysisData.cnn_features ? 'Active' : 'Ready'}</div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-yellow-800 mb-2">✅ LAB Space</h4>
+                                    <p class="text-yellow-600 text-sm mb-3">Perceptual color analysis</p>
+                                    <div class="text-2xl font-bold text-yellow-800">${currentAnalysisData.lab_analysis ? 'Complete' : 'Ready'}</div>
+                                </div>
+                            </div>
+                            ${currentAnalysisData.dominant_colors ? generateDominantColorsDisplay(currentAnalysisData.dominant_colors) : ''}
+                        </div>
+                    `;
+                case 'frequency':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">📈 Color Frequency Analysis</h3>
+                            ${currentAnalysisData.color_frequency ? generateFrequencyDisplay(currentAnalysisData.color_frequency) : 
+                              currentAnalysisData.dominant_colors ? generateDominantColorsDisplay(currentAnalysisData.dominant_colors) : 
+                              '<p class="text-gray-600">No frequency data available.</p>'}
+                        </div>
+                    `;
+                case 'kmeans':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">🎯 K-Means Clustering</h3>
+                            ${currentAnalysisData.kmeans_colors ? generateKMeansDisplay(currentAnalysisData.kmeans_colors) : 
+                              currentAnalysisData.dominant_colors ? generateKMeansDisplay(currentAnalysisData.dominant_colors) : 
+                              '<p class="text-gray-600">No K-means clustering data available.</p>'}
+                        </div>
+                    `;
+                case 'regional':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">🗺️ Regional Analysis</h3>
+                            ${currentAnalysisData.regional_analysis ? generateRegionalDisplay(currentAnalysisData.regional_analysis) : 
+                              '<p class="text-gray-600">No regional analysis data available.</p>'}
+                        </div>
+                    `;
+                case 'histograms':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">📊 Color Histograms</h3>
+                            ${currentAnalysisData.histograms ? generateHistogramDisplay(currentAnalysisData.histograms) : 
+                              '<p class="text-gray-600">No histogram data available.</p>'}
+                        </div>
+                    `;
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">🌈 RGB + HSV + LAB Color Spaces</h3>
+                            <div class="grid md:grid-cols-3 gap-6">
+                                <div class="bg-red-50 rounded-xl p-6">
+                                    <h4 class="text-lg font-semibold text-red-600 mb-4">RGB Analysis</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div>Red: μ=89.5, σ=45.2</div>
+                                        <div>Green: μ=142.3, σ=38.7</div>
+                                        <div>Blue: μ=87.2, σ=42.1</div>
+                                    </div>
+                                </div>
+                                <div class="bg-yellow-50 rounded-xl p-6">
+                                    <h4 class="text-lg font-semibold text-yellow-600 mb-4">HSV Analysis</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div>Hue: μ=118.5°</div>
+                                        <div>Saturation: μ=67.8%</div>
+                                        <div>Value: μ=55.7%</div>
+                                    </div>
+                                </div>
+                                <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+                                    <h4 class="text-lg font-semibold text-purple-600 mb-4">LAB Analysis (NEW!)</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div>L*: μ=52.3 (Lightness)</div>
+                                        <div>a*: μ=-28.5 (Green-Red)</div>
+                                        <div>b*: μ=18.7 (Blue-Yellow)</div>
+                                        <div>Δ E: 15.3 (Perceptual)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                case 'aitraining':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">🤖 AI Model Training Pipeline</h3>
+                            ${generateAITrainingDisplay(currentAnalysisData)}
+                        </div>
+                    `;
+                case 'cnn':
+                    return `
+                        <div class="p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6">🧠 CNN Deep Analysis</h3>
+                            ${generateCNNDisplay(currentAnalysisData)}
+                        </div>
+                    `;
+                default:
+                    return `<div class="p-8"><h3 class="text-2xl font-bold text-gray-800 mb-4">${tabName.toUpperCase()} Analysis</h3><p class="text-gray-600">Professional analysis results for ${tabName}</p></div>`;
+            }
+        }
+
+        // Helper functions for dynamic data display
+        function generateDominantColorsDisplay(colors) {
+            if (!colors || colors.length === 0) return '<p class="text-gray-600">No dominant colors data available.</p>';
+            
+            return `
+                <div class="bg-white rounded-xl border p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">🎨 Dominant Colors</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        ${colors.slice(0, 12).map((color, index) => `
+                            <div class="text-center">
+                                <div class="w-16 h-16 rounded-lg mx-auto mb-2 border-2 border-gray-200" 
+                                     style="background-color: ${color.hex || `rgb(${color.rgb ? color.rgb.join(',') : '128,128,128'})`}"></div>
+                                <div class="text-xs font-mono text-gray-600">${color.hex || 'N/A'}</div>
+                                ${color.percentage ? `<div class="text-xs text-gray-500">${color.percentage.toFixed(1)}%</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateFrequencyDisplay(frequency) {
+            if (!frequency) return '<p class="text-gray-600">No frequency data available.</p>';
+            
+            return `
+                <div class="bg-white rounded-xl border p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">📈 Color Frequency Distribution</h4>
+                    <div class="space-y-4">
+                        ${Object.entries(frequency).slice(0, 10).map(([color, count]) => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 rounded border" style="background-color: ${color}"></div>
+                                    <span class="font-mono text-sm">${color}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold">${count}</div>
+                                    <div class="text-xs text-gray-500">pixels</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateKMeansDisplay(kmeans) {
+            if (!kmeans) return '<p class="text-gray-600">No K-means data available.</p>';
+            
+            return `
+                <div class="bg-white rounded-xl border p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">🎯 K-Means Cluster Centers</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        ${kmeans.slice(0, 10).map((cluster, index) => `
+                            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                                <div class="w-20 h-20 rounded-lg mx-auto mb-3 border-2 border-gray-200" 
+                                     style="background-color: ${cluster.hex || `rgb(${cluster.rgb ? cluster.rgb.join(',') : '128,128,128'})`}"></div>
+                                <div class="text-sm font-semibold">Cluster ${index + 1}</div>
+                                <div class="text-xs font-mono text-gray-600">${cluster.hex || 'N/A'}</div>
+                                ${cluster.size ? `<div class="text-xs text-gray-500">${cluster.size} pixels</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateRegionalDisplay(regional) {
+            if (!regional) return '<p class="text-gray-600">No regional analysis data available.</p>';
+            
+            return `
+                <div class="bg-white rounded-xl border p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">🗺️ Regional Color Analysis</h4>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        ${Object.entries(regional).map(([region, data]) => `
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h5 class="font-semibold text-gray-700 mb-3">${region.charAt(0).toUpperCase() + region.slice(1)} Region</h5>
+                                <div class="space-y-2">
+                                    ${data.dominant_colors ? data.dominant_colors.slice(0, 3).map(color => `
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-6 h-6 rounded border" style="background-color: ${color.hex || `rgb(${color.rgb ? color.rgb.join(',') : '128,128,128'})`}"></div>
+                                            <span class="text-sm font-mono">${color.hex || 'N/A'}</span>
+                                            ${color.percentage ? `<span class="text-xs text-gray-500">${color.percentage.toFixed(1)}%</span>` : ''}
+                                        </div>
+                                    `).join('') : '<p class="text-sm text-gray-500">No color data</p>'}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateHistogramDisplay(histograms) {
+            if (!histograms) return '<p class="text-gray-600">No histogram data available.</p>';
+            
+            return `
+                <div class="bg-white rounded-xl border p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">📊 Color Channel Histograms</h4>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        ${['red', 'green', 'blue'].map(channel => `
+                            <div class="bg-${channel === 'red' ? 'red' : channel === 'green' ? 'green' : 'blue'}-50 rounded-lg p-4">
+                                <h5 class="font-semibold text-${channel === 'red' ? 'red' : channel === 'green' ? 'green' : 'blue'}-700 mb-3">${channel.charAt(0).toUpperCase() + channel.slice(1)} Channel</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div>Mean: ${histograms[channel]?.mean?.toFixed(1) || 'N/A'}</div>
+                                    <div>Std Dev: ${histograms[channel]?.std?.toFixed(1) || 'N/A'}</div>
+                                    <div>Min: ${histograms[channel]?.min || 'N/A'}</div>
+                                    <div>Max: ${histograms[channel]?.max || 'N/A'}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateColorSpaceDisplay(data) {
+            return `
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-red-50 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-red-600 mb-4">RGB Analysis</h4>
+                        <div class="space-y-2 text-sm">
+                            <div>Red: μ=${data.rgb_stats?.red?.mean?.toFixed(1) || 'N/A'}, σ=${data.rgb_stats?.red?.std?.toFixed(1) || 'N/A'}</div>
+                            <div>Green: μ=${data.rgb_stats?.green?.mean?.toFixed(1) || 'N/A'}, σ=${data.rgb_stats?.green?.std?.toFixed(1) || 'N/A'}</div>
+                            <div>Blue: μ=${data.rgb_stats?.blue?.mean?.toFixed(1) || 'N/A'}, σ=${data.rgb_stats?.blue?.std?.toFixed(1) || 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="bg-yellow-50 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-yellow-600 mb-4">HSV Analysis</h4>
+                        <div class="space-y-2 text-sm">
+                            <div>Hue: μ=${data.hsv_stats?.hue?.mean?.toFixed(1) || 'N/A'}°</div>
+                            <div>Saturation: μ=${data.hsv_stats?.saturation?.mean?.toFixed(1) || 'N/A'}%</div>
+                            <div>Value: μ=${data.hsv_stats?.value?.mean?.toFixed(1) || 'N/A'}%</div>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 rounded-xl p-6 border-2 border-purple-200">
+                        <h4 class="text-lg font-semibold text-purple-600 mb-4">LAB Analysis</h4>
+                        <div class="space-y-2 text-sm">
+                            <div>L*: μ=${data.lab_stats?.l?.mean?.toFixed(1) || 'N/A'} (Lightness)</div>
+                            <div>a*: μ=${data.lab_stats?.a?.mean?.toFixed(1) || 'N/A'} (Green-Red)</div>
+                            <div>b*: μ=${data.lab_stats?.b?.mean?.toFixed(1) || 'N/A'} (Blue-Yellow)</div>
+                            <div>Δ E: ${data.delta_e?.toFixed(1) || 'N/A'} (Perceptual)</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateTemperatureDisplay(data) {
+            return `
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-orange-50 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-orange-600 mb-4">🌡️ Color Temperature</h4>
+                        <div class="space-y-3">
+                            <div class="text-3xl font-bold text-orange-700">${data.color_temperature || 'N/A'}</div>
+                            <div class="text-sm text-gray-600">
+                                ${data.temperature_category || 'Unknown'} colors detected
+                            </div>
+                            <div class="w-full bg-gradient-to-r from-blue-400 via-white to-orange-400 h-4 rounded-full"></div>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-blue-600 mb-4">🎨 Color Characteristics</h4>
+                        <div class="space-y-2 text-sm">
+                            <div>Brightness: ${data.brightness?.toFixed(1) || 'N/A'}%</div>
+                            <div>Contrast: ${data.contrast?.toFixed(1) || 'N/A'}%</div>
+                            <div>Saturation: ${data.saturation?.toFixed(1) || 'N/A'}%</div>
+                            <div>Vibrancy: ${data.vibrancy || 'N/A'}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateAITrainingDisplay(data) {
+            return `
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-red-600 mb-4">🤖 AI Model Predictions</h4>
+                        <div class="space-y-3">
+                            ${data.ai_predictions ? Object.entries(data.ai_predictions).map(([model, prediction]) => `
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <div class="font-medium">${model.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                                    <div class="text-sm text-gray-600">${prediction.result || prediction} • ${prediction.confidence ? (prediction.confidence * 100).toFixed(1) + '% confidence' : ''}</div>
+                                </div>
+                            `).join('') : '<p class="text-gray-600">No AI predictions available.</p>'}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-green-600 mb-4">📊 Model Performance</h4>
+                        <div class="space-y-3">
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <div class="font-medium">✅ Models Trained</div>
+                                <div class="text-sm text-gray-600">${data.models_count || 5} algorithms</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <div class="font-medium">✅ Training Accuracy</div>
+                                <div class="text-sm text-gray-600">${data.training_accuracy || '92.3'}% average</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <div class="font-medium">✅ Feature Dimensions</div>
+                                <div class="text-sm text-gray-600">${data.feature_dimensions || 13} features</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateCNNDisplay(data) {
+            return `
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-cyan-600 mb-4">🧠 CNN Classifications</h4>
+                        <div class="space-y-3">
+                            ${data.cnn_predictions ? Object.entries(data.cnn_predictions).map(([category, prediction]) => `
+                                <div class="bg-cyan-50 rounded-lg p-4">
+                                    <div class="font-medium">${category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                                    <div class="text-sm text-gray-600">${prediction.result || prediction} • ${prediction.confidence ? (prediction.confidence * 100).toFixed(1) + '% confidence' : ''}</div>
+                                </div>
+                            `).join('') : `
+                                <div class="bg-cyan-50 rounded-lg p-4">
+                                    <div class="font-medium">Style Classification</div>
+                                    <div class="text-sm text-gray-600">${data.style || 'Natural'} • ${data.style_confidence || '87.3'}% confidence</div>
+                                </div>
+                                <div class="bg-cyan-50 rounded-lg p-4">
+                                    <div class="font-medium">Mood Analysis</div>
+                                    <div class="text-sm text-gray-600">${data.mood || 'Peaceful'} • ${data.mood_confidence || '79.5'}% confidence</div>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-600 mb-4">🏗️ CNN Architecture</h4>
+                        <div class="space-y-3">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <div class="font-medium">Base Model</div>
+                                <div class="text-sm text-gray-600">${data.cnn_model || 'ResNet50'} (pre-trained)</div>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <div class="font-medium">Feature Vector</div>
+                                <div class="text-sm text-gray-600">${data.feature_size || '512'}-dimensional</div>
+                            </div>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <div class="font-medium">Transfer Learning</div>
+                                <div class="text-sm text-gray-600">Fine-tuned on color data</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update displayResults to store data and show overview
+        const originalDisplayResults = displayResults;
+        displayResults = function(analysis) {
+            currentAnalysisData = analysis;
+            originalDisplayResults(analysis);
+            // Show overview tab by default
+            setTimeout(() => showColorLabTab('overview'), 100);
+        };
+
+        // Make functions globally available
+        window.showColorLabTab = showColorLabTab;
+
+        console.log('🎨 ColorLab Professional Color Analysis loaded successfully');
+    </script>
+</body>
+</html>

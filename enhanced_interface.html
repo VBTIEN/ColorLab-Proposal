@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Professional AI Color Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        },
+                        purple: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'bounce-gentle': 'bounceGentle 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        bounceGentle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' },
+                            '100%': { boxShadow: '0 0 30px rgba(139, 92, 246, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .color-circle {
+            background: linear-gradient(135deg, var(--color) 0%, var(--color-dark) 100%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        }
+        .icon-glow {
+            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+        }
+        .histogram-bar {
+            transition: all 0.3s ease;
+        }
+        .histogram-bar:hover {
+            transform: scaleY(1.1);
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg">
+    <!-- Main Container -->
+    <div class="min-h-screen p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            
+            <!-- Header -->
+            <header class="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 rounded-3xl shadow-2xl mb-8 overflow-hidden relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
+                <div class="relative z-10 px-8 py-12 text-center">
+                    <div class="flex justify-center mb-6">
+                        <div class="relative">
+                            <i class="fas fa-palette text-6xl text-blue-400 animate-float icon-glow"></i>
+                            <div class="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+                        <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Professional AI Color Analyzer</span>
+                    </h1>
+                    <p class="text-xl sm:text-2xl text-gray-300 mb-6 font-light">
+                        🎯 Complete Color Analysis: Frequency • Dominant Colors • Regional Distribution • Histograms • Color Spaces
+                    </p>
+                    
+                    <!-- API Status -->
+                    <div id="apiStatus" class="inline-flex items-center gap-3 px-6 py-3 glass-effect rounded-full text-white font-medium">
+                        <div id="statusDot" class="w-3 h-3 rounded-full bg-red-500 animate-pulse-slow"></div>
+                        <span id="statusText">Checking API...</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Upload Section -->
+            <section class="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 mb-8">
+                <div id="uploadSection" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center transition-all duration-300 hover:border-blue-500 hover:bg-blue-50/50 cursor-pointer group">
+                    <div id="uploadArea" class="space-y-4">
+                        <div class="relative inline-block">
+                            <i class="fas fa-cloud-upload-alt text-7xl text-blue-500 group-hover:animate-bounce-gentle transition-transform duration-300 icon-glow"></i>
+                            <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-ping"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                                <i class="fas fa-images text-purple-500"></i>
+                                Drop your image here or click to select
+                            </h3>
+                            <p class="text-gray-600 flex items-center justify-center gap-2">
+                                <i class="fas fa-info-circle text-blue-500"></i>
+                                Supports JPG, PNG, GIF, BMP, WEBP • Max 10MB
+                            </p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    
+                    <!-- Image Preview -->
+                    <div id="imagePreview" class="hidden mt-8">
+                        <div class="inline-block relative">
+                            <img id="previewImage" class="max-w-sm max-h-80 rounded-2xl shadow-lg border-4 border-white" alt="Preview">
+                            <div id="previewInfo" class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white p-4 rounded-b-2xl">
+                                <!-- Image info will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div id="actionButtons" class="hidden mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <button id="analyzeBtn" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+                            <i class="fas fa-brain mr-2 group-hover:animate-pulse"></i>
+                            Analyze Colors with AI
+                        </button>
+                        <button id="clearBtn" class="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+                            <i class="fas fa-trash-alt mr-2 group-hover:animate-bounce"></i>
+                            Clear Image
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Section -->
+            <div id="loadingSection" class="hidden bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-12 text-center mb-8">
+                <div class="flex justify-center mb-6">
+                    <div class="w-4 h-4 bg-blue-600 rounded-full animate-bounce mr-2"></div>
+                    <div class="w-4 h-4 bg-purple-600 rounded-full animate-bounce mr-2" style="animation-delay: 0.1s"></div>
+                    <div class="w-4 h-4 bg-pink-600 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Analyzing colors with AI...</h3>
+                <p class="text-gray-600">Processing: Frequency • Dominant Colors • Regional Analysis • Histograms • Color Spaces</p>
+            </div>
+
+            <!-- Results Container -->
+            <div id="resultsContainer" class="hidden animate-slide-up space-y-8">
+                
+                <!-- Results Header -->
+                <div class="bg-gradient-to-r from-emerald-600 to-blue-600 rounded-3xl p-8 text-center text-white shadow-2xl">
+                    <div class="flex justify-center mb-4">
+                        <i class="fas fa-chart-pie text-5xl animate-float icon-glow"></i>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-2">Complete Color Analysis Results</h2>
+                    <p class="text-xl opacity-90">AI-powered comprehensive color breakdown</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-tachometer-alt text-blue-500 mr-2"></i>
+                        Quick Statistics
+                    </h3>
+                    <div id="quickStats" class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Quick stats will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Dominant Colors Section -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-star text-yellow-500 mr-2"></i>
+                        Dominant Colors (K-Means Analysis)
+                    </h3>
+                    <div id="dominantColors" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                        <!-- Dominant colors will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Color Frequency Analysis -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-chart-bar text-green-500 mr-2"></i>
+                        Color Frequency Analysis
+                    </h3>
+                    <div id="colorFrequency" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Color frequency data will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Histograms Section -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-chart-area text-purple-500 mr-2"></i>
+                        Color Histograms (RGB & HSV)
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-700 mb-4 text-center">RGB Histogram</h4>
+                            <canvas id="rgbHistogram" width="400" height="300"></canvas>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-700 mb-4 text-center">HSV Histogram</h4>
+                            <canvas id="hsvHistogram" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regional Analysis -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-th text-orange-500 mr-2"></i>
+                        Regional Color Distribution (3x3 Grid)
+                    </h3>
+                    <div id="regionalAnalysis" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Regional analysis will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Color Spaces Analysis -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-cube text-indigo-500 mr-2"></i>
+                        Color Spaces Analysis (RGB • HSV • LAB)
+                    </h3>
+                    <div id="colorSpaces" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Color spaces analysis will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Temperature & Characteristics -->
+                <div class="bg-white rounded-3xl shadow-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                        <i class="fas fa-thermometer-half text-red-500 mr-2"></i>
+                        Color Temperature & Characteristics
+                    </h3>
+                    <div id="colorCharacteristics" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- Color characteristics will be populated here -->
+                    </div>
+                </div>
+
+                <!-- AI Insights Section -->
+                <div class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-3xl p-8 text-white">
+                    <div class="text-center mb-8">
+                        <div class="flex justify-center mb-4">
+                            <i class="fas fa-robot text-5xl animate-glow icon-glow"></i>
+                        </div>
+                        <h3 class="text-3xl font-bold mb-2">AI Color Intelligence</h3>
+                        <p class="text-xl opacity-90">Advanced insights powered by machine learning</p>
+                    </div>
+                    <div id="aiInsights" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- AI insights will be populated here -->
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'https://spsvd9ec7i.execute-api.ap-southeast-1.amazonaws.com/prod';
+        const BUCKET_NAME = 'ai-image-analyzer-web-1751723364';
+
+        let selectedFile = null;
+        let analysisData = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎨 Initializing Professional AI Color Analyzer...');
+            initializeApp();
+        });
+
+        function initializeApp() {
+            checkApiStatus();
+            setupEventListeners();
+        }
+
+        function checkApiStatus() {
+            console.log('🔍 Checking API status...');
+            
+            const statusText = document.getElementById('statusText');
+            const statusDot = document.getElementById('statusDot');
+            const apiStatus = document.getElementById('apiStatus');
+            
+            statusText.textContent = 'Checking API...';
+            statusDot.className = 'w-3 h-3 rounded-full bg-yellow-500 animate-pulse-slow';
+            
+            fetch(`${API_BASE_URL}/health`)
+                .then(response => {
+                    console.log('📡 API response:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('✅ API data:', data);
+                    if (data && data.success) {
+                        statusText.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Professional Color AI Online - ' + data.version;
+                        statusDot.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse-slow';
+                        apiStatus.className = 'inline-flex items-center gap-3 px-6 py-3 bg-green-500/20 border border-green-500/30 rounded-full text-white font-medium';
+                    } else {
+                        throw new Error('API unsuccessful');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ API error:', error);
+                    statusText.innerHTML = '❌ Error - <span style="cursor:pointer;text-decoration:underline;" onclick="checkApiStatus()">Retry</span>';
+                    statusDot.className = 'w-3 h-3 rounded-full bg-red-500 animate-pulse-slow';
+                });
+        }
+
+        function setupEventListeners() {
+            const uploadSection = document.getElementById('uploadSection');
+            const fileInput = document.getElementById('fileInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const clearBtn = document.getElementById('clearBtn');
+
+            // Upload area click
+            uploadSection.addEventListener('click', (e) => {
+                if (!e.target.closest('#actionButtons')) {
+                    fileInput.click();
+                }
+            });
+
+            // File input change
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Drag and drop
+            uploadSection.addEventListener('dragover', handleDragOver);
+            uploadSection.addEventListener('dragleave', handleDragLeave);
+            uploadSection.addEventListener('drop', handleDrop);
+
+            // Buttons
+            analyzeBtn.addEventListener('click', analyzeImage);
+            clearBtn.addEventListener('click', clearImage);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            const uploadSection = document.getElementById('uploadSection');
+            uploadSection.className = 'border-2 border-dashed border-purple-500 bg-purple-50 rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer transform scale-105';
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            const uploadSection = document.getElementById('uploadSection');
+            uploadSection.className = 'border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center transition-all duration-300 hover:border-blue-500 hover:bg-blue-50/50 cursor-pointer group';
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            handleDragLeave(event);
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            console.log('📁 File selected:', file.name);
+            
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file!');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB!');
+                return;
+            }
+            
+            selectedFile = file;
+            displayImagePreview(file);
+        }
+
+        function displayImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImage = document.getElementById('previewImage');
+                const imagePreview = document.getElementById('imagePreview');
+                const actionButtons = document.getElementById('actionButtons');
+                const previewInfo = document.getElementById('previewInfo');
+                
+                previewImage.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+                actionButtons.classList.remove('hidden');
+                
+                // Update preview info
+                previewInfo.innerHTML = `
+                    <div class="text-sm">
+                        <div class="font-semibold">${file.name}</div>
+                        <div>Size: ${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                        <div>Type: ${file.type}</div>
+                    </div>
+                `;
+                
+                // Update upload area
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.innerHTML = `
+                    <div class="relative inline-block">
+                        <i class="fas fa-check-circle text-7xl text-green-500 group-hover:animate-bounce-gentle transition-transform duration-300 icon-glow"></i>
+                        <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-ping"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                            <i class="fas fa-images text-purple-500"></i>
+                            Image Ready for Analysis
+                        </h3>
+                        <p class="text-gray-600 flex items-center justify-center gap-2">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            Click "Analyze Colors" to start comprehensive analysis
+                        </p>
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearImage() {
+            selectedFile = null;
+            analysisData = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+            document.getElementById('loadingSection').classList.add('hidden');
+            
+            // Reset upload area
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.innerHTML = `
+                <div class="relative inline-block">
+                    <i class="fas fa-cloud-upload-alt text-7xl text-blue-500 group-hover:animate-bounce-gentle transition-transform duration-300 icon-glow"></i>
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full animate-ping"></div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
+                        <i class="fas fa-images text-purple-500"></i>
+                        Drop your image here or click to select
+                    </h3>
+                    <p class="text-gray-600 flex items-center justify-center gap-2">
+                        <i class="fas fa-info-circle text-blue-500"></i>
+                        Supports JPG, PNG, GIF, BMP, WEBP • Max 10MB
+                    </p>
+                </div>
+            `;
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile) {
+                alert('Please select an image first!');
+                return;
+            }
+            
+            console.log('🔍 Starting comprehensive image analysis...');
+            
+            // Show loading
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('resultsContainer').classList.add('hidden');
+            
+            try {
+                // Convert file to base64
+                const base64 = await fileToBase64(selectedFile);
+                console.log('🔄 File converted to base64');
+                
+                // Prepare request
+                const requestData = {
+                    image_data: base64.split(',')[1], // Remove data:image/...;base64, prefix
+                    analysis_type: 'color_analysis'
+                };
+                
+                console.log('📤 Sending comprehensive analysis request...');
+                
+                const response = await fetch(`${API_BASE_URL}/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                console.log('📡 Analysis response:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ Comprehensive analysis completed');
+                
+                analysisData = result.analysis;
+                displayComprehensiveResults(result);
+                
+            } catch (error) {
+                console.error('❌ Analysis error:', error);
+                document.getElementById('loadingSection').innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-6xl text-red-500 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-red-600 mb-2">Analysis Failed</h3>
+                        <p class="text-gray-600 mb-4">${error.message}</p>
+                        <button onclick="analyzeImage()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function displayComprehensiveResults(result) {
+            const analysis = result.analysis;
+            
+            // Hide loading, show results
+            document.getElementById('loadingSection').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.remove('hidden');
+            
+            // Display all sections
+            displayQuickStats(analysis);
+            displayDominantColors(analysis.dominant_colors);
+            displayColorFrequency(analysis.color_frequency);
+            displayHistograms(analysis.histograms);
+            displayRegionalAnalysis(analysis.regional_analysis);
+            displayColorSpaces(analysis.color_spaces);
+            displayColorCharacteristics(analysis.characteristics);
+            displayAIInsights(analysis);
+        }
+
+        function displayQuickStats(analysis) {
+            const quickStats = document.getElementById('quickStats');
+            quickStats.innerHTML = `
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">${analysis.color_frequency.unique_colors}</div>
+                    <div class="text-sm text-gray-600">Unique Colors</div>
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2">${analysis.color_frequency.diversity_index}</div>
+                    <div class="text-sm text-gray-600">Diversity Index</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-purple-600 mb-2">${analysis.characteristics.temperature.classification}</div>
+                    <div class="text-sm text-gray-600">Temperature</div>
+                </div>
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-orange-600 mb-2">${analysis.characteristics.brightness.level}</div>
+                    <div class="text-sm text-gray-600">Brightness</div>
+                </div>
+            `;
+        }
+
+        function displayDominantColors(colors) {
+            const dominantColors = document.getElementById('dominantColors');
+            dominantColors.innerHTML = colors.slice(0, 10).map(color => `
+                <div class="bg-white rounded-xl p-4 shadow-lg text-center border hover:shadow-xl transition-shadow">
+                    <div class="w-20 h-20 rounded-full mx-auto mb-3 shadow-lg border-4 border-white" 
+                         style="background-color: ${color.hex}"></div>
+                    <div class="font-bold text-gray-800 text-lg">${color.hex}</div>
+                    <div class="text-sm text-gray-600 mb-1">${color.percentage}%</div>
+                    <div class="text-xs text-gray-500">${color.name}</div>
+                    <div class="text-xs text-gray-400 mt-1">RGB(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b})</div>
+                </div>
+            `).join('');
+        }
+
+        function displayColorFrequency(frequency) {
+            const colorFrequency = document.getElementById('colorFrequency');
+            colorFrequency.innerHTML = `
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-chart-pie text-blue-500 mr-2"></i>
+                        Frequency Statistics
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Total Pixels:</span>
+                            <span class="font-semibold">${frequency.total_pixels.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Unique Colors:</span>
+                            <span class="font-semibold">${frequency.unique_colors}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Diversity Index:</span>
+                            <span class="font-semibold">${frequency.diversity_index}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Color Richness:</span>
+                            <span class="font-semibold text-green-600">${frequency.color_richness}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-crown text-yellow-500 mr-2"></i>
+                        Most Frequent Color
+                    </h4>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-full shadow-lg border-4 border-white" 
+                             style="background-color: ${frequency.most_frequent.color}"></div>
+                        <div>
+                            <div class="font-bold text-lg">${frequency.most_frequent.color}</div>
+                            <div class="text-gray-600">${frequency.most_frequent.percentage}% of image</div>
+                            <div class="text-sm text-gray-500">${frequency.most_frequent.count} pixels</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayHistograms(histograms) {
+            // RGB Histogram
+            const rgbCtx = document.getElementById('rgbHistogram').getContext('2d');
+            new Chart(rgbCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 16}, (_, i) => i * 16),
+                    datasets: [
+                        {
+                            label: 'Red',
+                            data: histograms.rgb.red,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Green',
+                            data: histograms.rgb.green,
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Blue',
+                            data: histograms.rgb.blue,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // HSV Histogram
+            const hsvCtx = document.getElementById('hsvHistogram').getContext('2d');
+            new Chart(hsvCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 16}, (_, i) => i * 16),
+                    datasets: [
+                        {
+                            label: 'Hue',
+                            data: histograms.hsv.hue,
+                            borderColor: 'rgb(168, 85, 247)',
+                            backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Saturation',
+                            data: histograms.hsv.saturation,
+                            borderColor: 'rgb(236, 72, 153)',
+                            backgroundColor: 'rgba(236, 72, 153, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Value',
+                            data: histograms.hsv.value,
+                            borderColor: 'rgb(251, 191, 36)',
+                            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayRegionalAnalysis(regional) {
+            const regionalAnalysis = document.getElementById('regionalAnalysis');
+            regionalAnalysis.innerHTML = regional.regions.map(region => `
+                <div class="bg-gray-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                        ${region.region}
+                    </h4>
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="w-12 h-12 rounded-full shadow-lg border-2 border-white" 
+                             style="background-color: ${region.dominant_color.hex}"></div>
+                        <div>
+                            <div class="font-bold">${region.dominant_color.hex}</div>
+                            <div class="text-sm text-gray-600">${region.dominant_color.percentage}%</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Colors:</span>
+                            <span class="font-semibold">${region.color_count}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Brightness:</span>
+                            <span class="font-semibold">${(region.brightness * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Average:</span>
+                            <span class="font-semibold">${region.average_color.hex}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayColorSpaces(colorSpaces) {
+            const colorSpacesDiv = document.getElementById('colorSpaces');
+            colorSpacesDiv.innerHTML = `
+                <div class="bg-red-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-square text-red-500 mr-2"></i>
+                        RGB Color Space
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Red Range:</span>
+                            <span class="font-semibold">${colorSpaces.rgb.red.min} - ${colorSpaces.rgb.red.max}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Green Range:</span>
+                            <span class="font-semibold">${colorSpaces.rgb.green.min} - ${colorSpaces.rgb.green.max}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Blue Range:</span>
+                            <span class="font-semibold">${colorSpaces.rgb.blue.min} - ${colorSpaces.rgb.blue.max}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Average RGB:</span>
+                            <span class="font-semibold">(${colorSpaces.rgb.red.avg}, ${colorSpaces.rgb.green.avg}, ${colorSpaces.rgb.blue.avg})</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-purple-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-circle text-purple-500 mr-2"></i>
+                        HSV Color Space
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Hue Range:</span>
+                            <span class="font-semibold">${(colorSpaces.hsv.hue.min * 360).toFixed(1)}° - ${(colorSpaces.hsv.hue.max * 360).toFixed(1)}°</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Saturation:</span>
+                            <span class="font-semibold">${(colorSpaces.hsv.saturation.avg * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Value:</span>
+                            <span class="font-semibold">${(colorSpaces.hsv.value.avg * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Color Gamut:</span>
+                            <span class="font-semibold">${colorSpaces.color_space_analysis.color_gamut}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-cube text-indigo-500 mr-2"></i>
+                        LAB Color Space
+                    </h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Lightness:</span>
+                            <span class="font-semibold">${colorSpaces.lab.lightness.avg}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">A Component:</span>
+                            <span class="font-semibold">${colorSpaces.lab.a_component.avg}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">B Component:</span>
+                            <span class="font-semibold">${colorSpaces.lab.b_component.avg}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Bit Depth:</span>
+                            <span class="font-semibold">${colorSpaces.color_space_analysis.bit_depth}-bit</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayColorCharacteristics(characteristics) {
+            const colorCharacteristics = document.getElementById('colorCharacteristics');
+            colorCharacteristics.innerHTML = `
+                <div class="bg-gradient-to-br from-red-50 to-blue-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-thermometer-half text-red-500 mr-2"></i>
+                        Temperature Analysis
+                    </h4>
+                    <div class="space-y-4">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold mb-2 ${characteristics.temperature.classification === 'Warm' ? 'text-red-500' : 'text-blue-500'}">
+                                ${characteristics.temperature.classification}
+                            </div>
+                            <div class="text-sm text-gray-600">Overall Temperature</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-red-500">${characteristics.temperature.warm_percentage}%</div>
+                                <div class="text-sm text-gray-600">Warm Colors</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-500">${characteristics.temperature.cool_percentage}%</div>
+                                <div class="text-sm text-gray-600">Cool Colors</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-red-500 to-blue-500 h-3 rounded-full" 
+                                 style="width: ${characteristics.temperature.temperature_score * 100}%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-50 to-purple-50 p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-adjust text-yellow-500 mr-2"></i>
+                        Brightness & Saturation
+                    </h4>
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Brightness Level:</span>
+                                <span class="font-semibold">${characteristics.brightness.level}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-yellow-500 h-2 rounded-full" 
+                                     style="width: ${characteristics.brightness.average * 100}%"></div>
+                            </div>
+                            <div class="text-sm text-gray-500">${(characteristics.brightness.average * 100).toFixed(1)}% average brightness</div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Saturation Level:</span>
+                                <span class="font-semibold">${characteristics.saturation.level}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" 
+                                     style="width: ${characteristics.saturation.average * 100}%"></div>
+                            </div>
+                            <div class="text-sm text-gray-500">${(characteristics.saturation.average * 100).toFixed(1)}% average saturation</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-purple-600">${characteristics.saturation.vibrancy}</div>
+                            <div class="text-sm text-gray-600">Vibrancy Level</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function displayAIInsights(analysis) {
+            const aiInsights = document.getElementById('aiInsights');
+            aiInsights.innerHTML = `
+                <div class="glass-effect p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-brain text-blue-400 mr-2"></i>
+                        AI Color Intelligence
+                    </h4>
+                    <div class="space-y-3 text-gray-200">
+                        <div class="flex justify-between">
+                            <span>Color Accuracy:</span>
+                            <span class="font-semibold text-green-400">${(analysis.ai_training_data.model_predictions.confidence_scores.color_accuracy * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Style Classification:</span>
+                            <span class="font-semibold text-blue-400">${(analysis.ai_training_data.model_predictions.confidence_scores.style_classification * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Mood Detection:</span>
+                            <span class="font-semibold text-purple-400">${(analysis.ai_training_data.model_predictions.confidence_scores.mood_detection * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Similarity Score:</span>
+                            <span class="font-semibold text-yellow-400">${(analysis.ai_training_data.model_predictions.similarity_score * 100).toFixed(1)}%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-xl">
+                    <h4 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-palette text-purple-400 mr-2"></i>
+                        Color Harmony Analysis
+                    </h4>
+                    <div class="space-y-3 text-gray-200">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-400 mb-1">${analysis.characteristics.harmony.type}</div>
+                            <div class="text-sm opacity-80">Harmony Type</div>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Harmony Score:</span>
+                            <span class="font-semibold text-green-400">${analysis.characteristics.harmony.score}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Balance:</span>
+                            <span class="font-semibold text-blue-400">${analysis.characteristics.harmony.balance}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Primary Mood:</span>
+                            <span class="font-semibold text-yellow-400">${analysis.characteristics.mood.primary}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Emotional Impact:</span>
+                            <span class="font-semibold text-pink-400">${analysis.characteristics.mood.emotional_impact}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+<script>
+// Patch để mở rộng web interface - thêm vào cuối file JavaScript hiện tại
+
+// Override displayComprehensiveResults để thêm enhancements
+const originalDisplayComprehensiveResults = window.displayComprehensiveResults || function() {};
+
+function displayComprehensiveResults(result) {
+    const analysis = result.analysis;
+    
+    // Hide loading, show results
+    document.getElementById('loadingSection').classList.add('hidden');
+    document.getElementById('resultsContainer').classList.remove('hidden');
+    
+    // Display all sections (gọi functions gốc)
+    displayQuickStats(analysis);
+    displayDominantColors(analysis.dominant_colors);
+    displayColorFrequency(analysis.color_frequency);
+    displayHistograms(analysis.histograms);
+    displayRegionalAnalysis(analysis.regional_analysis);
+    displayColorSpaces(analysis.color_spaces);
+    displayColorCharacteristics(analysis.characteristics);
+    displayAIInsights(analysis);
+    
+    // *** THÊM CÁC ENHANCEMENTS MỚI ***
+    enhanceAllDisplays(analysis);
+}
+
+// Mở rộng function displayHistograms để hiển thị HSV Histogram
+function enhanceHistograms(histograms) {
+    if (!histograms.hsv) return;
+    
+    // Tìm histogram section
+    const histogramSection = document.querySelector('[id*="histogram"]')?.closest('.bg-white, .bg-gray-50, .p-6');
+    if (!histogramSection) return;
+    
+    // Thêm HSV Histogram nếu chưa có
+    if (!document.getElementById('hsvHistogramSection')) {
+        const hsvSection = document.createElement('div');
+        hsvSection.id = 'hsvHistogramSection';
+        hsvSection.className = 'mt-6 bg-purple-50 p-6 rounded-xl';
+        hsvSection.innerHTML = `
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-chart-area text-purple-500 mr-2"></i>
+                HSV Histogram
+            </h4>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-medium text-gray-700 mb-3 text-center">Hue Distribution</h5>
+                    <canvas id="hueHistogram" width="300" height="200"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-medium text-gray-700 mb-3 text-center">Saturation Distribution</h5>
+                    <canvas id="saturationHistogram" width="300" height="200"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-medium text-gray-700 mb-3 text-center">Value Distribution</h5>
+                    <canvas id="valueHistogram" width="300" height="200"></canvas>
+                </div>
+            </div>
+        `;
+        
+        histogramSection.parentNode.insertBefore(hsvSection, histogramSection.nextSibling);
+        
+        // Render HSV charts
+        setTimeout(() => renderHSVCharts(histograms.hsv), 100);
+    }
+}
+
+// Function để render HSV charts
+function renderHSVCharts(hsvData) {
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: { 
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.1)' }
+            },
+            x: {
+                grid: { color: 'rgba(0,0,0,0.1)' }
+            }
+        }
+    };
+    
+    // Hue Chart
+    const hueCtx = document.getElementById('hueHistogram')?.getContext('2d');
+    if (hueCtx && hsvData.hue) {
+        new Chart(hueCtx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: hsvData.hue.length}, (_, i) => `${Math.round(i * 360 / hsvData.hue.length)}°`),
+                datasets: [{
+                    label: 'Hue',
+                    data: hsvData.hue,
+                    backgroundColor: Array.from({length: hsvData.hue.length}, (_, i) => 
+                        `hsl(${i * 360 / hsvData.hue.length}, 70%, 60%)`
+                    ),
+                    borderWidth: 1,
+                    borderColor: 'rgba(147, 51, 234, 0.3)'
+                }]
+            },
+            options: chartOptions
+        });
+    }
+    
+    // Saturation Chart
+    const satCtx = document.getElementById('saturationHistogram')?.getContext('2d');
+    if (satCtx && hsvData.saturation) {
+        new Chart(satCtx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: hsvData.saturation.length}, (_, i) => `${Math.round(i * 100 / hsvData.saturation.length)}%`),
+                datasets: [{
+                    label: 'Saturation',
+                    data: hsvData.saturation,
+                    backgroundColor: 'rgba(236, 72, 153, 0.6)',
+                    borderColor: 'rgba(236, 72, 153, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+    }
+    
+    // Value Chart
+    const valCtx = document.getElementById('valueHistogram')?.getContext('2d');
+    if (valCtx && hsvData.value) {
+        new Chart(valCtx, {
+            type: 'bar',
+            data: {
+                labels: Array.from({length: hsvData.value.length}, (_, i) => `${Math.round(i * 100 / hsvData.value.length)}%`),
+                datasets: [{
+                    label: 'Value',
+                    data: hsvData.value,
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
+        });
+    }
+}
+
+// Mở rộng Regional Analysis với 3x3 Grid
+function enhanceRegionalAnalysis(regional) {
+    if (!regional.regions) return;
+    
+    // Tìm regional section
+    const regionalSection = document.querySelector('[id*="regional"]')?.closest('.bg-white, .bg-gray-50, .p-6');
+    if (!regionalSection) return;
+    
+    // Thêm 3x3 Grid nếu chưa có
+    if (!document.getElementById('regionalGrid3x3')) {
+        const gridSection = document.createElement('div');
+        gridSection.id = 'regionalGrid3x3';
+        gridSection.className = 'mt-6 bg-green-50 p-6 rounded-xl';
+        gridSection.innerHTML = `
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-th text-green-500 mr-2"></i>
+                Regional Color Distribution (3x3 Grid)
+            </h4>
+            <div class="flex justify-center">
+                <div id="colorGrid3x3" class="grid grid-cols-3 gap-2 w-64 h-64">
+                    <!-- Grid cells will be populated -->
+                </div>
+            </div>
+            <div class="mt-4 text-sm text-gray-600 text-center">
+                Visual representation of dominant colors across image regions
+            </div>
+        `;
+        
+        regionalSection.parentNode.insertBefore(gridSection, regionalSection.nextSibling);
+        
+        // Render 3x3 Grid
+        renderColorGrid3x3(regional.regions);
+    }
+}
+
+// Function để render 3x3 Color Grid
+function renderColorGrid3x3(regions) {
+    const gridElement = document.getElementById('colorGrid3x3');
+    if (!gridElement) return;
+    
+    const regionNames = [
+        'Top-Left', 'Top-Center', 'Top-Right',
+        'Middle-Left', 'Center', 'Middle-Right', 
+        'Bottom-Left', 'Bottom-Center', 'Bottom-Right'
+    ];
+    
+    gridElement.innerHTML = '';
+    
+    regionNames.forEach((regionName, index) => {
+        const region = regions.find(r => r.region === regionName) || {
+            dominant_color: { hex: '#808080', rgb: { r: 128, g: 128, b: 128 } },
+            brightness: 0.5
+        };
+        
+        const cell = document.createElement('div');
+        cell.className = 'aspect-square rounded-lg border-2 border-white shadow-lg relative overflow-hidden cursor-pointer transform hover:scale-110 transition-all duration-200';
+        cell.style.backgroundColor = region.dominant_color.hex;
+        cell.title = `${regionName}: ${region.dominant_color.hex}\nBrightness: ${(region.brightness * 100).toFixed(1)}%`;
+        
+        // Thêm label với contrast tốt
+        const textColor = region.brightness > 0.5 ? '#000000' : '#FFFFFF';
+        const shortName = regionName.split('-').map(word => word[0]).join('');
+        
+        cell.innerHTML = `
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xs font-bold" style="color: ${textColor}; text-shadow: 1px 1px 2px rgba(0,0,0,0.7);">
+                    ${shortName}
+                </span>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center">
+                ${region.dominant_color.hex}
+            </div>
+        `;
+        
+        gridElement.appendChild(cell);
+    });
+}
+
+// Mở rộng Color Spaces với LAB
+function enhanceColorSpaces(colorSpaces) {
+    if (!colorSpaces.lab) return;
+    
+    // Tìm color spaces section
+    const colorSpacesSection = document.querySelector('[id*="colorSpaces"]')?.closest('.bg-white, .bg-gray-50, .p-6');
+    if (!colorSpacesSection) return;
+    
+    // Thêm LAB Color Space nếu chưa có
+    if (!document.getElementById('labColorSpaceSection')) {
+        const labSection = document.createElement('div');
+        labSection.id = 'labColorSpaceSection';
+        labSection.className = 'mt-6 bg-yellow-50 p-6 rounded-xl';
+        labSection.innerHTML = `
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-flask text-yellow-500 mr-2"></i>
+                LAB Color Space Analysis
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-medium text-gray-700 mb-3 text-center">L* (Lightness)</h5>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Min:</span>
+                            <span class="font-medium">${colorSpaces.lab.lightness?.min || 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Max:</span>
+                            <span class="font-medium">${colorSpaces.lab.lightness?.max || 100}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Average:</span>
+                            <span class="font-medium">${colorSpaces.lab.lightness?.avg || 50}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-medium text-gray-700 mb-3 text-center">a* (Green ↔ Red)</h5>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Min:</span>
+                            <span class="font-medium">${colorSpaces.lab.a_component?.min || -50}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Max:</span>
+                            <span class="font-medium">${colorSpaces.lab.a_component?.max || 50}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Average:</span>
+                            <span class="font-medium">${colorSpaces.lab.a_component?.avg || 0}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <h5 class="font-medium text-gray-700 mb-3 text-center">b* (Blue ↔ Yellow)</h5>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Min:</span>
+                            <span class="font-medium">${colorSpaces.lab.b_component?.min || -50}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Max:</span>
+                            <span class="font-medium">${colorSpaces.lab.b_component?.max || 50}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Average:</span>
+                            <span class="font-medium">${colorSpaces.lab.b_component?.avg || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-blue-100 p-4 rounded-lg">
+                <p class="text-sm text-blue-800 flex items-start">
+                    <i class="fas fa-info-circle mr-2 mt-0.5 flex-shrink-0"></i>
+                    <span>LAB color space is perceptually uniform, meaning equal numerical distances represent equal visual differences. This makes it ideal for accurate color analysis and comparison.</span>
+                </p>
+            </div>
+        `;
+        
+        colorSpacesSection.parentNode.insertBefore(labSection, colorSpacesSection.nextSibling);
+    }
+}
+
+// Mở rộng Characteristics với Color Temperature
+function enhanceCharacteristics(characteristics) {
+    if (!characteristics.temperature) return;
+    
+    // Tìm characteristics section
+    const characteristicsSection = document.querySelector('[id*="characteristics"]')?.closest('.bg-white, .bg-gray-50, .p-6');
+    if (!characteristicsSection) return;
+    
+    // Thêm Color Temperature section nếu chưa có
+    if (!document.getElementById('colorTemperatureSection')) {
+        const tempSection = document.createElement('div');
+        tempSection.id = 'colorTemperatureSection';
+        tempSection.className = 'mt-6 bg-orange-50 p-6 rounded-xl';
+        
+        const tempColor = getTemperatureColor(characteristics.temperature.classification);
+        const tempIcon = getTemperatureIcon(characteristics.temperature.classification);
+        
+        tempSection.innerHTML = `
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-thermometer-half text-orange-500 mr-2"></i>
+                Color Temperature & Advanced Characteristics
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <div class="text-3xl mb-2">${tempIcon}</div>
+                    <h5 class="font-medium text-gray-700 mb-2">Temperature</h5>
+                    <div class="text-xl font-bold ${tempColor} mb-1">
+                        ${characteristics.temperature.classification || 'Neutral'}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        Score: ${(characteristics.temperature.temperature_score || 0.5).toFixed(2)}
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        Warm: ${(characteristics.temperature.warm_percentage || 50).toFixed(1)}%<br>
+                        Cool: ${(characteristics.temperature.cool_percentage || 50).toFixed(1)}%
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <div class="text-3xl mb-2">☀️</div>
+                    <h5 class="font-medium text-gray-700 mb-2">Brightness</h5>
+                    <div class="text-xl font-bold text-yellow-600 mb-1">
+                        ${characteristics.brightness?.level || 'Medium'}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        ${((characteristics.brightness?.average || 0.5) * 100).toFixed(1)}%
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        ${characteristics.brightness?.distribution || 'Even'}
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <div class="text-3xl mb-2">🎨</div>
+                    <h5 class="font-medium text-gray-700 mb-2">Saturation</h5>
+                    <div class="text-xl font-bold text-purple-600 mb-1">
+                        ${characteristics.saturation?.level || 'Medium'}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        ${((characteristics.saturation?.average || 0.5) * 100).toFixed(1)}%
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        ${characteristics.saturation?.vibrancy || 'Moderate'}
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm text-center">
+                    <div class="text-3xl mb-2">🎭</div>
+                    <h5 class="font-medium text-gray-700 mb-2">Harmony</h5>
+                    <div class="text-xl font-bold text-green-600 mb-1">
+                        ${characteristics.harmony?.type || 'Mixed'}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        Score: ${(characteristics.harmony?.score || 0.5).toFixed(2)}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        ${characteristics.harmony?.balance || 'Balanced'}
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gradient-to-r from-orange-100 via-yellow-100 to-blue-100 p-4 rounded-lg">
+                <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                    <i class="fas fa-heart mr-2 text-pink-500"></i>
+                    Emotional Impact & Mood
+                </h5>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <span class="font-medium text-gray-700">Primary Mood:</span>
+                        <span class="ml-2 text-gray-600">${characteristics.mood?.primary || 'Neutral'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Secondary:</span>
+                        <span class="ml-2 text-gray-600">${characteristics.mood?.secondary || 'Balanced'}</span>
+                    </div>
+                    <div>
+                        <span class="font-medium text-gray-700">Impact:</span>
+                        <span class="ml-2 text-gray-600">${characteristics.mood?.emotional_impact || 'Moderate'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        characteristicsSection.parentNode.insertBefore(tempSection, characteristicsSection.nextSibling);
+    }
+}
+
+// Helper functions
+function getTemperatureColor(classification) {
+    switch(classification?.toLowerCase()) {
+        case 'warm': return 'text-red-600';
+        case 'cool': return 'text-blue-600';
+        case 'neutral': return 'text-gray-600';
+        default: return 'text-gray-600';
+    }
+}
+
+function getTemperatureIcon(classification) {
+    switch(classification?.toLowerCase()) {
+        case 'warm': return '🔥';
+        case 'cool': return '❄️';
+        case 'neutral': return '🌡️';
+        default: return '🌡️';
+    }
+}
+
+// Function chính để áp dụng tất cả enhancements
+function enhanceAllDisplays(analysis) {
+    console.log('🔧 Applying web interface enhancements...');
+    
+    // Đợi một chút để DOM được render
+    setTimeout(() => {
+        try {
+            if (analysis.histograms) {
+                enhanceHistograms(analysis.histograms);
+            }
+            
+            if (analysis.regional_analysis) {
+                enhanceRegionalAnalysis(analysis.regional_analysis);
+            }
+            
+            if (analysis.color_spaces) {
+                enhanceColorSpaces(analysis.color_spaces);
+            }
+            
+            if (analysis.characteristics) {
+                enhanceCharacteristics(analysis.characteristics);
+            }
+            
+            console.log('✅ Web interface enhancements completed successfully');
+        } catch (error) {
+            console.error('❌ Enhancement error:', error);
+        }
+    }, 500);
+}
+</script>
+</body></html>

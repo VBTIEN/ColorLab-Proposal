@@ -1,0 +1,199 @@
+/* CSS Fixes for Header and Button Issues */
+
+/* Fix 1: Header contrast issue */
+.header {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+    color: white;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    font-weight: 700;
+}
+
+.header p {
+    font-size: 1.2em;
+    opacity: 0.95;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Fix 2: API Status better visibility */
+.api-status {
+    display: inline-block;
+    padding: 10px 25px;
+    border-radius: 25px;
+    font-size: 0.95em;
+    margin-top: 15px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.api-status.online {
+    background: rgba(46, 125, 50, 0.9);
+    border: 2px solid #4caf50;
+    color: white;
+}
+
+.api-status.offline {
+    background: rgba(198, 40, 40, 0.9);
+    border: 2px solid #f44336;
+    color: white;
+}
+
+/* Fix 3: Upload area improvements */
+.upload-area {
+    border: 3px dashed #bdc3c7;
+    border-radius: 15px;
+    padding: 60px 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: #fafafa;
+}
+
+.upload-area:hover {
+    border-color: #3498db;
+    background: rgba(52, 152, 219, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.upload-area.dragover {
+    border-color: #2980b9;
+    background: rgba(52, 152, 219, 0.1);
+    transform: scale(1.02);
+}
+
+/* Fix 4: Button improvements */
+.btn {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+}
+
+.btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Fix 5: Upload icon and text improvements */
+.upload-icon {
+    font-size: 4em;
+    color: #95a5a6;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover .upload-icon {
+    color: #3498db;
+    transform: scale(1.1);
+}
+
+.upload-text {
+    font-size: 1.2em;
+    color: #7f8c8d;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.upload-area:hover .upload-text {
+    color: #2c3e50;
+}
+
+/* Fix 6: Better contrast for body background */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Fix 7: Container improvements */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Fix 8: Loading spinner improvements */
+.spinner {
+    border: 4px solid #ecf0f1;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+/* Fix 9: Result cards improvements */
+.result-card {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+/* Fix 10: Tab buttons improvements */
+.tab-button {
+    background: none;
+    border: none;
+    padding: 15px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.tab-button:hover {
+    color: #2c3e50;
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.tab-button.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+    background: rgba(52, 152, 219, 0.1);
+    font-weight: 600;
+}

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 AI Image Analyzer - Optimized</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .api-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .api-status.healthy {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+        }
+
+        .api-status.unhealthy {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+
+        .analysis-section {
+            margin-top: 40px;
+        }
+
+        .analysis-tabs {
+            display: flex;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 30px;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .result-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .confidence {
+            float: right;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid #ddd;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #c62828;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2e7d32;
+        }
+
+        .info-section {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Image Analyzer</h1>
+            <p>Professional AI-powered image analysis with optimized Lambda Layers</p>
+            <div id="apiStatus" class="api-status">
+                <span id="statusText">Checking API status...</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-text">
+                        Drag & drop your image here or click to select
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*">
+                    <button class="btn" onclick="document.getElementById('fileInput').click()">
+                        Choose Image
+                    </button>
+                </div>
+                
+                <div id="imagePreview" style="display: none;">
+                    <img id="previewImg" class="image-preview" alt="Preview">
+                    <div>
+                        <button class="btn" id="analyzeBtn" onclick="analyzeImage()">
+                            🔍 Analyze Image
+                        </button>
+                        <button class="btn" onclick="clearImage()" style="background: #666;">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="analysis-section" id="analysisSection" style="display: none;">
+                <div class="analysis-tabs">
+                    <button class="tab-button active" onclick="showTab('objects')">
+                        🏷️ Objects Detected
+                    </button>
+                    <button class="tab-button" onclick="showTab('colors')">
+                        🎨 Colors
+                    </button>
+                    <button class="tab-button" onclick="showTab('details')">
+                        📊 Details
+                    </button>
+                </div>
+
+                <div id="objectsTab" class="tab-content active">
+                    <div class="results-grid" id="objectResults"></div>
+                </div>
+
+                <div id="colorsTab" class="tab-content">
+                    <div class="results-grid" id="colorResults"></div>
+                </div>
+
+                <div id="detailsTab" class="tab-content">
+                    <div class="results-grid" id="detailResults"></div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loadingSection" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing your image with AI...</p>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <h3>🚀 Optimized with Lambda Layers</h3>
+                <p>This interface uses our optimized API with Lambda Layers for faster performance:</p>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>⚡ 6x faster deployments (60KB vs 19.5MB)</li>
+                    <li>🔄 Reusable dependency layers</li>
+                    <li>📦 Clean separation of code and dependencies</li>
+                    <li>🏗️ Professional enterprise architecture</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'https://ej0h55nm0k.execute-api.ap-southeast-1.amazonaws.com/prod';
+        const BUCKET_NAME = 'ai-image-analyzer-web-1751723364'; // S3 bucket for uploads
+        
+        let selectedFile = null;
+        let selectedImageData = null;
+        let currentAnalysisResult = null;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            console.log('🚀 Initializing AI Image Analyzer...');
+            
+            // Check API status
+            await checkApiStatus();
+            
+            // Setup drag and drop
+            setupDragAndDrop();
+            
+            // Setup file input
+            setupFileInput();
+            
+            console.log('✅ App initialized successfully');
+        }
+
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('apiStatus');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                console.log('🔍 Checking API health...');
+                const response = await fetch(`${API_BASE_URL}/health`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusElement.className = 'api-status healthy';
+                    statusText.textContent = '✅ API Healthy - Ready for analysis';
+                    console.log('✅ API is healthy:', data);
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ API health check failed:', error);
+                statusElement.className = 'api-status unhealthy';
+                statusText.textContent = '❌ API Unavailable - Using demo mode';
+            }
+        }
+
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+            
+            uploadArea.addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+        }
+
+        function setupFileInput() {
+            const fileInput = document.getElementById('fileInput');
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(file) {
+            console.log('📁 File selected:', file.name, file.size, 'bytes');
+            
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file.');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                showError('Image size must be less than 10MB.');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImageData = e.target.result;
+                showImagePreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showImagePreview(imageSrc) {
+            const previewSection = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            previewImg.src = imageSrc;
+            previewSection.style.display = 'block';
+            
+            // Hide analysis section
+            document.getElementById('analysisSection').style.display = 'none';
+            
+            console.log('🖼️ Image preview displayed');
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile || !selectedImageData) {
+                showError('Please select an image first.');
+                return;
+            }
+            
+            console.log('🔍 Starting image analysis...');
+            
+            // Show loading
+            showLoading(true);
+            
+            try {
+                // Convert image to base64 (remove data URL prefix)
+                const base64Data = selectedImageData.split(',')[1];
+                
+                // Prepare request
+                const requestBody = {
+                    bucket: BUCKET_NAME,
+                    image_data: base64Data,
+                    analysis_type: 'comprehensive'
+                };
+                
+                console.log('📤 Sending analysis request...');
+                
+                // Call API
+                const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ Analysis completed:', result);
+                
+                if (result.success) {
+                    currentAnalysisResult = result;
+                    displayAnalysisResults(result);
+                    showSuccess('Image analysis completed successfully!');
+                } else {
+                    throw new Error(result.message || 'Analysis failed');
+                }
+                
+            } catch (error) {
+                console.error('❌ Analysis failed:', error);
+                showError(`Analysis failed: ${error.message}`);
+                
+                // Show demo results as fallback
+                showDemoResults();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayAnalysisResults(result) {
+            const analysis = result.analysis;
+            
+            // Display objects
+            displayObjects(analysis.objects_detected || []);
+            
+            // Display colors
+            displayColors(analysis.dominant_colors || []);
+            
+            // Display details
+            displayDetails(result);
+            
+            // Show analysis section
+            document.getElementById('analysisSection').style.display = 'block';
+            
+            console.log('📊 Analysis results displayed');
+        }
+
+        function displayObjects(objects) {
+            const container = document.getElementById('objectResults');
+            
+            if (!objects || objects.length === 0) {
+                container.innerHTML = '<div class="result-card"><p>No objects detected.</p></div>';
+                return;
+            }
+            
+            const html = `
+                <div class="result-card">
+                    <h3>🏷️ Detected Objects</h3>
+                    ${objects.map(obj => `
+                        <div class="result-item">
+                            <strong>${obj.name}</strong>
+                            <span class="confidence">${obj.confidence}% confidence</span>
+                            ${obj.categories && obj.categories.length > 0 ? 
+                                `<div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                                    Categories: ${obj.categories.join(', ')}
+                                </div>` : ''
+                            }
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function displayColors(colors) {
+            const container = document.getElementById('colorResults');
+            
+            if (!colors || colors.length === 0) {
+                container.innerHTML = '<div class="result-card"><p>No colors detected.</p></div>';
+                return;
+            }
+            
+            const html = `
+                <div class="result-card">
+                    <h3>🎨 Dominant Colors</h3>
+                    ${colors.map(color => `
+                        <div class="color-item">
+                            <div class="color-swatch" style="background-color: ${color.hex}"></div>
+                            <div>
+                                <strong>${color.color}</strong>
+                                <div style="font-size: 0.9em; color: #666;">
+                                    ${color.hex} • ${color.percentage}%
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function displayDetails(result) {
+            const container = document.getElementById('detailResults');
+            const analysis = result.analysis;
+            
+            const html = `
+                <div class="result-card">
+                    <h3>📊 Analysis Details</h3>
+                    <div class="result-item">
+                        <strong>Analysis Method:</strong> ${analysis.analysis_method || 'Unknown'}
+                    </div>
+                    <div class="result-item">
+                        <strong>Total Objects:</strong> ${analysis.total_objects || 0}
+                    </div>
+                    <div class="result-item">
+                        <strong>Analysis Type:</strong> ${analysis.analysis_type || 'comprehensive'}
+                    </div>
+                    <div class="result-item">
+                        <strong>Confidence Threshold:</strong> ${analysis.confidence_threshold || 25}%
+                    </div>
+                    <div class="result-item">
+                        <strong>Timestamp:</strong> ${new Date(result.timestamp).toLocaleString()}
+                    </div>
+                    <div class="result-item">
+                        <strong>API Version:</strong> ${result.version || 'Unknown'}
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function showDemoResults() {
+            console.log('🎭 Showing demo results...');
+            
+            const demoResult = {
+                success: true,
+                timestamp: new Date().toISOString(),
+                version: 'Demo Mode',
+                analysis: {
+                    objects_detected: [
+                        { name: 'Person', confidence: 95.2, categories: ['People'] },
+                        { name: 'Clothing', confidence: 87.5, categories: ['Fashion'] },
+                        { name: 'Face', confidence: 92.1, categories: ['People'] }
+                    ],
+                    dominant_colors: [
+                        { color: 'Blue', hex: '#4169E1', percentage: 35.0 },
+                        { color: 'White', hex: '#FFFFFF', percentage: 28.0 },
+                        { color: 'Gray', hex: '#808080', percentage: 22.0 },
+                        { color: 'Black', hex: '#000000', percentage: 15.0 }
+                    ],
+                    analysis_method: 'Demo Analysis',
+                    total_objects: 3,
+                    analysis_type: 'demo',
+                    confidence_threshold: 25
+                }
+            };
+            
+            displayAnalysisResults(demoResult);
+            showError('Using demo results - API may be unavailable');
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function clearImage() {
+            selectedFile = null;
+            selectedImageData = null;
+            currentAnalysisResult = null;
+            
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('analysisSection').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            
+            console.log('🗑️ Image cleared');
+        }
+
+        function showLoading(show) {
+            const loadingSection = document.getElementById('loadingSection');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            if (show) {
+                loadingSection.style.display = 'block';
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = '🔄 Analyzing...';
+            } else {
+                loadingSection.style.display = 'none';
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Image';
+            }
+        }
+
+        function showError(message) {
+            const existingError = document.querySelector('.error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
+            
+            document.querySelector('.main-content').insertBefore(
+                errorDiv, 
+                document.querySelector('.upload-section')
+            );
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const existingSuccess = document.querySelector('.success');
+            if (existingSuccess) {
+                existingSuccess.remove();
+            }
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `<strong>Success:</strong> ${message}`;
+            
+            document.querySelector('.main-content').insertBefore(
+                successDiv, 
+                document.querySelector('.upload-section')
+            );
+            
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+
+        // Utility functions
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        console.log('🤖 AI Image Analyzer loaded successfully');
+    </script>
+</body>
+</html>

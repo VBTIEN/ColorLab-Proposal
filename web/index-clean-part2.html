@@ -1,0 +1,703 @@
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Image Analyzer</h1>
+            <p>Professional AI-powered image analysis with enhanced colors</p>
+            <div id="apiStatus" class="api-status offline">
+                <span id="statusText">🔴 Checking API status...</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📸</div>
+                    <div class="upload-text">
+                        Drag & drop your image here or click to select
+                    </div>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*">
+                    <button class="btn" id="chooseImageBtn" type="button">
+                        Choose Image
+                    </button>
+                </div>
+                
+                <div id="imagePreview" style="display: none;">
+                    <img id="previewImg" class="image-preview" alt="Preview">
+                    <div>
+                        <button class="btn" id="analyzeBtn" onclick="analyzeImage()">
+                            🔍 Analyze Image
+                        </button>
+                        <button class="btn" onclick="clearImage()" style="background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);">
+                            🗑️ Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="analysis-section" id="analysisSection" style="display: none;">
+                <div class="analysis-tabs">
+                    <button class="tab-button active" onclick="showTab('objects')">
+                        🏷️ Objects
+                    </button>
+                    <button class="tab-button" onclick="showTab('colors')">
+                        🎨 Colors
+                    </button>
+                    <button class="tab-button" onclick="showTab('details')">
+                        📊 Details
+                    </button>
+                </div>
+
+                <div id="objectsTab" class="tab-content active">
+                    <div class="results-grid" id="objectResults"></div>
+                </div>
+
+                <div id="colorsTab" class="tab-content">
+                    <div class="results-grid" id="colorResults"></div>
+                </div>
+
+                <div id="detailsTab" class="tab-content">
+                    <div class="results-grid" id="detailResults"></div>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="loadingSection" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing your image with AI...</p>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <h3>🚀 Enhanced with Advanced Color Analysis</h3>
+                <p>This AI Image Analyzer features:</p>
+                <ul style="margin-top: 10px; padding-left: 20px;">
+                    <li>⚡ AWS Lambda with optimized layers</li>
+                    <li>🤖 Amazon Rekognition for object detection</li>
+                    <li>🎨 Enhanced color analysis with temperature & brightness</li>
+                    <li>☁️ S3 for secure image storage</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'https://ej0h55nm0k.execute-api.ap-southeast-1.amazonaws.com/prod';
+        const BUCKET_NAME = 'ai-image-analyzer-web-1751723364';
+        
+        let selectedFile = null;
+        let selectedImageData = null;
+        let currentAnalysisResult = null;
+        let isApiOnline = false;
+        let isFileDialogOpen = false;
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing AI Image Analyzer...');
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            // Check API status
+            await checkApiStatus();
+            
+            // Setup drag and drop
+            setupDragAndDrop();
+            
+            // Setup file input
+            setupFileInput();
+            
+            console.log('✅ App initialized successfully');
+        }
+
+        async function checkApiStatus() {
+            const statusElement = document.getElementById('apiStatus');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                console.log('🔍 Checking API health...');
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.status === 'healthy') {
+                        statusElement.className = 'api-status online';
+                        statusText.textContent = '🟢 API Online - Enhanced Colors Ready';
+                        isApiOnline = true;
+                        console.log('✅ API is healthy:', data);
+                    } else {
+                        throw new Error('API returned unhealthy status');
+                    }
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('❌ API health check failed:', error);
+                statusElement.className = 'api-status offline';
+                statusText.textContent = '🔴 API Offline - Demo Mode Only';
+                isApiOnline = false;
+            }
+        }
+
+        function setupDragAndDrop() {
+            const uploadArea = document.getElementById('uploadArea');
+            let dragCounter = 0;
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            uploadArea.addEventListener('drop', handleDrop, false);
+            uploadArea.addEventListener('click', handleUploadAreaClick, false);
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            function highlight(e) {
+                dragCounter++;
+                uploadArea.classList.add('dragover');
+            }
+            
+            function unhighlight(e) {
+                dragCounter--;
+                if (dragCounter === 0) {
+                    uploadArea.classList.remove('dragover');
+                }
+            }
+            
+            function handleDrop(e) {
+                dragCounter = 0;
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            }
+            
+            function handleUploadAreaClick(e) {
+                if (e.target === uploadArea || e.target.classList.contains('upload-icon') || 
+                    e.target.classList.contains('upload-text')) {
+                    openFileDialog();
+                }
+            }
+        }
+
+        function setupFileInput() {
+            const fileInput = document.getElementById('fileInput');
+            const chooseButton = document.getElementById('chooseImageBtn');
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+                isFileDialogOpen = false;
+            });
+            
+            if (chooseButton) {
+                chooseButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openFileDialog();
+                });
+            }
+        }
+
+        function openFileDialog() {
+            if (isFileDialogOpen) {
+                console.log('File dialog already open, ignoring click');
+                return;
+            }
+            
+            isFileDialogOpen = true;
+            const fileInput = document.getElementById('fileInput');
+            
+            fileInput.value = '';
+            
+            const handleFocus = () => {
+                setTimeout(() => {
+                    isFileDialogOpen = false;
+                    window.removeEventListener('focus', handleFocus);
+                }, 300);
+            };
+            
+            window.addEventListener('focus', handleFocus);
+            fileInput.click();
+        }
+
+        function handleFileSelect(file) {
+            console.log('📁 File selected:', file.name, file.size, 'bytes');
+            
+            if (!validateFile(file)) {
+                return;
+            }
+            
+            selectedFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImageData = e.target.result;
+                showImagePreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function validateFile(file) {
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            
+            if (!validTypes.includes(file.type.toLowerCase())) {
+                showError('Please select a valid image file (JPG, PNG, GIF, BMP, WEBP).');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                showError(`Image size exceeds the 10MB limit.`);
+                return false;
+            }
+            
+            if (file.size === 0) {
+                showError('The selected file appears to be empty.');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function showImagePreview(imageSrc) {
+            const previewSection = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            
+            if (previewImg && previewSection) {
+                previewImg.onload = () => {
+                    previewSection.style.display = 'block';
+                    const analysisSection = document.getElementById('analysisSection');
+                    if (analysisSection) {
+                        analysisSection.style.display = 'none';
+                    }
+                    console.log('🖼️ Image preview displayed successfully');
+                };
+                
+                previewImg.onerror = () => {
+                    showError('Failed to load image preview. Please try a different image.');
+                };
+                
+                previewImg.src = imageSrc;
+            }
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile || !selectedImageData) {
+                showError('Please select an image first.');
+                return;
+            }
+            
+            console.log('🔍 Starting image analysis...');
+            showLoading(true);
+            
+            if (!isApiOnline) {
+                console.log('🎭 API offline, showing demo results...');
+                setTimeout(() => {
+                    showDemoResults();
+                    showLoading(false);
+                }, 2000);
+                return;
+            }
+            
+            try {
+                const base64Data = selectedImageData.split(',')[1];
+                
+                const requestBody = {
+                    bucket: BUCKET_NAME,
+                    image_data: base64Data,
+                    analysis_type: 'comprehensive'
+                };
+                
+                console.log('📤 Sending analysis request...');
+                
+                const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('✅ Analysis completed:', result);
+                
+                if (result.success) {
+                    currentAnalysisResult = result;
+                    displayAnalysisResults(result);
+                    showSuccess('Enhanced color analysis completed successfully!');
+                } else {
+                    throw new Error(result.message || 'Analysis failed');
+                }
+                
+            } catch (error) {
+                console.error('❌ Analysis failed:', error);
+                showError(`Analysis failed: ${error.message}`);
+                showDemoResults();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayAnalysisResults(result) {
+            const analysis = result.analysis;
+            
+            displayObjects(analysis.objects_detected || []);
+            displayColorsEnhanced(analysis.dominant_colors || []);
+            displayDetails(result);
+            
+            document.getElementById('analysisSection').style.display = 'block';
+            console.log('📊 Analysis results displayed');
+        }
+
+        function displayObjects(objects) {
+            const container = document.getElementById('objectResults');
+            
+            if (!objects || objects.length === 0) {
+                container.innerHTML = '<div class="result-card"><p>No objects detected.</p></div>';
+                return;
+            }
+            
+            const html = `
+                <div class="result-card">
+                    <h3>🏷️ Detected Objects</h3>
+                    ${objects.map(obj => `
+                        <div class="result-item">
+                            <strong>${obj.name}</strong>
+                            <span class="confidence">${obj.confidence}% confidence</span>
+                            ${obj.categories && obj.categories.length > 0 ? 
+                                `<div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                                    Categories: ${obj.categories.join(', ')}
+                                </div>` : ''
+                            }
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function displayColorsEnhanced(colors) {
+            const container = document.getElementById('colorResults');
+            
+            if (!colors || colors.length === 0) {
+                container.innerHTML = '<div class="result-card"><p>No colors detected.</p></div>';
+                return;
+            }
+            
+            const html = `
+                <div class="result-card">
+                    <h3>🎨 Enhanced Color Analysis</h3>
+                    <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em;">
+                        <strong>Total Colors:</strong> ${colors.length} | <strong>Analysis:</strong> Enhanced Smart Algorithm
+                    </div>
+                    ${colors.map((color, index) => `
+                        <div class="enhanced-color-item" onclick="toggleColorDetails(${index})">
+                            <div class="color-main-info">
+                                <div class="color-swatch-enhanced" style="background-color: ${color.hex}"></div>
+                                <div class="color-primary-details">
+                                    <div class="color-name-enhanced">
+                                        <strong>${color.color}</strong>
+                                        <span class="color-percentage">${color.percentage}%</span>
+                                    </div>
+                                    <div class="color-hex-rgb">
+                                        <span class="hex-code">${color.hex}</span>
+                                        <span>RGB(${color.rgb.join(', ')})</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="color-detailed-info" id="colorDetails${index}">
+                                <div class="color-properties">
+                                    <div class="color-property">
+                                        <span class="property-label">Temperature:</span>
+                                        <span class="property-value temperature-${color.temperature}">
+                                            ${getTemperatureIcon(color.temperature)} ${color.temperature.charAt(0).toUpperCase() + color.temperature.slice(1)}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="color-property">
+                                        <span class="property-label">Brightness:</span>
+                                        <span class="property-value brightness-${color.brightness}">
+                                            ${getBrightnessIcon(color.brightness)} ${color.brightness.charAt(0).toUpperCase() + color.brightness.slice(1)}
+                                        </span>
+                                    </div>
+                                    
+                                    ${color.hsv ? `
+                                        <div class="color-property">
+                                            <span class="property-label">HSV:</span>
+                                            <div style="display: flex; gap: 10px;">
+                                                <span style="background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">H: ${color.hsv.hue}°</span>
+                                                <span style="background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">S: ${color.hsv.saturation}%</span>
+                                                <span style="background: #f8f9fa; padding: 2px 6px; border-radius: 4px; font-size: 0.8em;">V: ${color.hsv.value}%</span>
+                                            </div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function getTemperatureIcon(temperature) {
+            switch(temperature) {
+                case 'warm': return '🔥';
+                case 'cool': return '❄️';
+                case 'neutral': return '⚪';
+                default: return '🎨';
+            }
+        }
+
+        function getBrightnessIcon(brightness) {
+            switch(brightness) {
+                case 'light': return '☀️';
+                case 'medium': return '🌤️';
+                case 'dark': return '🌙';
+                default: return '💡';
+            }
+        }
+
+        function toggleColorDetails(index) {
+            const detailsElement = document.getElementById(`colorDetails${index}`);
+            const isVisible = detailsElement.style.display === 'block';
+            
+            // Hide all other details
+            document.querySelectorAll('.color-detailed-info').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Toggle current details
+            detailsElement.style.display = isVisible ? 'none' : 'block';
+        }
+
+        function displayDetails(result) {
+            const container = document.getElementById('detailResults');
+            const analysis = result.analysis;
+            
+            const html = `
+                <div class="result-card">
+                    <h3>📊 Analysis Details</h3>
+                    <div class="result-item">
+                        <strong>Analysis Method:</strong> ${analysis.analysis_method || 'Unknown'}
+                    </div>
+                    <div class="result-item">
+                        <strong>Total Objects:</strong> ${analysis.total_objects || 0}
+                    </div>
+                    <div class="result-item">
+                        <strong>Total Colors:</strong> ${analysis.total_colors || 0}
+                    </div>
+                    <div class="result-item">
+                        <strong>Color Extraction:</strong> ${analysis.color_extraction || 'Standard'}
+                    </div>
+                    <div class="result-item">
+                        <strong>Analysis Type:</strong> ${analysis.analysis_type || 'comprehensive'}
+                    </div>
+                    <div class="result-item">
+                        <strong>Confidence Threshold:</strong> ${analysis.confidence_threshold || 25}%
+                    </div>
+                    <div class="result-item">
+                        <strong>Timestamp:</strong> ${new Date(result.timestamp).toLocaleString()}
+                    </div>
+                    <div class="result-item">
+                        <strong>API Version:</strong> ${result.version || 'Unknown'}
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function showDemoResults() {
+            console.log('🎭 Showing demo results...');
+            
+            const demoResult = {
+                success: true,
+                timestamp: new Date().toISOString(),
+                version: 'Demo Mode - Enhanced Colors',
+                analysis: {
+                    objects_detected: [
+                        { name: 'Person', confidence: 95.2, categories: ['People'] },
+                        { name: 'Clothing', confidence: 87.5, categories: ['Fashion'] },
+                        { name: 'Face', confidence: 92.1, categories: ['People'] }
+                    ],
+                    dominant_colors: [
+                        { 
+                            color: 'Royal Blue', 
+                            hex: '#4169E1', 
+                            rgb: [65, 105, 225], 
+                            percentage: 35.0,
+                            temperature: 'cool',
+                            brightness: 'medium',
+                            hsv: { hue: 225.0, saturation: 71.1, value: 88.2 }
+                        },
+                        { 
+                            color: 'Pure White', 
+                            hex: '#FFFFFF', 
+                            rgb: [255, 255, 255], 
+                            percentage: 28.0,
+                            temperature: 'neutral',
+                            brightness: 'light',
+                            hsv: { hue: 0.0, saturation: 0.0, value: 100.0 }
+                        },
+                        { 
+                            color: 'Charcoal Gray', 
+                            hex: '#36454F', 
+                            rgb: [54, 69, 79], 
+                            percentage: 22.0,
+                            temperature: 'cool',
+                            brightness: 'dark',
+                            hsv: { hue: 204.0, saturation: 31.6, value: 31.0 }
+                        }
+                    ],
+                    analysis_method: 'Demo Analysis - Enhanced Colors',
+                    color_extraction: 'Demo smart algorithm',
+                    total_objects: 3,
+                    total_colors: 3,
+                    analysis_type: 'demo',
+                    confidence_threshold: 25
+                }
+            };
+            
+            displayAnalysisResults(demoResult);
+            showError('API is offline - showing demo results with enhanced colors');
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function clearImage() {
+            selectedFile = null;
+            selectedImageData = null;
+            currentAnalysisResult = null;
+            
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('analysisSection').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            
+            console.log('🗑️ Image cleared');
+        }
+
+        function showLoading(show) {
+            const loadingSection = document.getElementById('loadingSection');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            if (show) {
+                loadingSection.style.display = 'block';
+                if (analyzeBtn) {
+                    analyzeBtn.disabled = true;
+                    analyzeBtn.innerHTML = '🔄 Analyzing...';
+                }
+                if (uploadArea) {
+                    uploadArea.style.pointerEvents = 'none';
+                    uploadArea.style.opacity = '0.7';
+                }
+            } else {
+                loadingSection.style.display = 'none';
+                if (analyzeBtn) {
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = '🔍 Analyze Image';
+                }
+                if (uploadArea) {
+                    uploadArea.style.pointerEvents = 'auto';
+                    uploadArea.style.opacity = '1';
+                }
+            }
+        }
+
+        function showError(message, duration = 5000) {
+            const existingErrors = document.querySelectorAll('.error');
+            existingErrors.forEach(error => error.remove());
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div><strong>⚠️ Error:</strong> ${message}</div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; color: #c62828; font-size: 1.2em; cursor: pointer; padding: 0 5px;">×</button>
+                </div>
+            `;
+            
+            const mainContent = document.querySelector('.main-content');
+            const uploadSection = document.querySelector('.upload-section');
+            mainContent.insertBefore(errorDiv, uploadSection);
+            
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, duration);
+        }
+
+        function showSuccess(message, duration = 3000) {
+            const existingSuccess = document.querySelectorAll('.success');
+            existingSuccess.forEach(success => success.remove());
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div><strong>✅ Success:</strong> ${message}</div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; color: #2e7d32; font-size: 1.2em; cursor: pointer; padding: 0 5px;">×</button>
+                </div>
+            `;
+            
+            const mainContent = document.querySelector('.main-content');
+            const uploadSection = document.querySelector('.upload-section');
+            mainContent.insertBefore(successDiv, uploadSection);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.remove();
+                }
+            }, duration);
+        }
+
+        console.log('🤖 AI Image Analyzer with Enhanced Colors loaded successfully');
+    </script>
+</body>
+</html>

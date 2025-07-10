@@ -1,0 +1,1 @@
+arn:aws:lambda:ap-southeast-1:741448948262:layer:ai-image-analyzer-complete:1

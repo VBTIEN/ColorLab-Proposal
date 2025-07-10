@@ -1,0 +1,7 @@
+{
+  "httpMethod": "POST",
+  "body": "{\"bucket\": \"image-analyzer-workshop-1751722329\", \"image_data\": \"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\"}",
+  "headers": {
+    "Content-Type": "application/json"
+  }
+}

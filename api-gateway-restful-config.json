@@ -1,0 +1,602 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "12.0",
+    "title": "AI Image Analyzer RESTful API",
+    "description": "Professional RESTful API for AI-powered image analysis with color harmony, temperature, and mood analysis"
+  },
+  "host": "cuwg234q8g.execute-api.ap-southeast-1.amazonaws.com",
+  "basePath": "/prod",
+  "schemes": ["https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API Health Check",
+        "description": "Check API status and get available endpoints",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "schema": {
+              "$ref": "#/definitions/HealthResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "summary": "CORS preflight",
+        "responses": {
+          "200": {
+            "description": "CORS headers",
+            "headers": {
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                "method.response.header.Access-Control-Allow-Methods": "'GET,POST,PUT,DELETE,OPTIONS'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Detailed Health Check",
+        "description": "Get detailed API health information",
+        "responses": {
+          "200": {
+            "description": "Detailed health status",
+            "schema": {
+              "$ref": "#/definitions/HealthResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      }
+    },
+    "/images": {
+      "post": {
+        "summary": "Create Image Analysis",
+        "description": "Upload image and perform comprehensive analysis",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateImageRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image analysis created successfully",
+            "schema": {
+              "$ref": "#/definitions/ImageAnalysisResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "get": {
+        "summary": "List Images",
+        "description": "Get list of analyzed images with pagination",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "default": 10,
+            "description": "Number of images to return"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "type": "integer",
+            "default": 0,
+            "description": "Number of images to skip"
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "type": "string",
+            "description": "Filter by date (YYYY-MM-DD format)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of images",
+            "schema": {
+              "$ref": "#/definitions/ImageListResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/images/{id}": {
+      "get": {
+        "summary": "Get Image Details",
+        "description": "Get specific image and its analysis",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Image ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image details",
+            "schema": {
+              "$ref": "#/definitions/ImageResponse"
+            }
+          },
+          "404": {
+            "description": "Image not found",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "put": {
+        "summary": "Update Image Analysis",
+        "description": "Re-analyze image with new options",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateImageRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image updated successfully"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "delete": {
+        "summary": "Delete Image",
+        "description": "Delete image and its analysis",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image deleted successfully"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/images/{id}/colors": {
+      "get": {
+        "summary": "Get Color Analysis",
+        "description": "Get dominant colors for specific image",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Color analysis",
+            "schema": {
+              "$ref": "#/definitions/ColorAnalysisResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/images/{id}/harmony": {
+      "get": {
+        "summary": "Get Harmony Analysis",
+        "description": "Get color harmony analysis for specific image",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Harmony analysis",
+            "schema": {
+              "$ref": "#/definitions/HarmonyAnalysisResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/images/{id}/temperature": {
+      "get": {
+        "summary": "Get Temperature Analysis",
+        "description": "Get color temperature analysis for specific image",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Temperature analysis"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/images/{id}/mood": {
+      "get": {
+        "summary": "Get Mood Analysis",
+        "description": "Get mood and emotion analysis for specific image",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mood analysis"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/images/{id}/recommendations": {
+      "get": {
+        "summary": "Get Recommendations",
+        "description": "Get professional recommendations for specific image",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Professional recommendations"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    },
+    "/analyze": {
+      "post": {
+        "summary": "Legacy Analysis Endpoint",
+        "description": "Legacy endpoint for backward compatibility (deprecated - use POST /images instead)",
+        "deprecated": true,
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/LegacyAnalyzeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analysis result (legacy format)"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "aws_proxy",
+          "httpMethod": "POST",
+          "uri": "arn:aws:apigateway:ap-southeast-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-southeast-1:741448948262:function:ImageAnalyzer/invocations"
+        }
+      },
+      "options": {
+        "$ref": "#/paths/~/options"
+      }
+    }
+  },
+  "definitions": {
+    "HealthResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "service": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "endpoints": {
+          "type": "object"
+        }
+      }
+    },
+    "CreateImageRequest": {
+      "type": "object",
+      "required": ["image_data"],
+      "properties": {
+        "image_data": {
+          "type": "string",
+          "description": "Base64 encoded image data"
+        },
+        "bucket": {
+          "type": "string",
+          "description": "S3 bucket name (optional)"
+        },
+        "options": {
+          "type": "object",
+          "description": "Analysis options"
+        }
+      }
+    },
+    "ImageAnalysisResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "image": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "upload_time": {
+              "type": "string"
+            },
+            "size_bytes": {
+              "type": "integer"
+            }
+          }
+        },
+        "analysis": {
+          "type": "object"
+        },
+        "links": {
+          "type": "object"
+        }
+      }
+    },
+    "ImageListResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "pagination": {
+          "type": "object"
+        }
+      }
+    },
+    "ImageResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "image": {
+          "type": "object"
+        },
+        "analysis": {
+          "type": "object"
+        },
+        "links": {
+          "type": "object"
+        }
+      }
+    },
+    "ColorAnalysisResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "image_id": {
+          "type": "string"
+        },
+        "colors": {
+          "type": "array"
+        }
+      }
+    },
+    "HarmonyAnalysisResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "image_id": {
+          "type": "string"
+        },
+        "harmony": {
+          "type": "object"
+        }
+      }
+    },
+    "UpdateImageRequest": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "object"
+        }
+      }
+    },
+    "LegacyAnalyzeRequest": {
+      "type": "object",
+      "required": ["bucket", "image_data"],
+      "properties": {
+        "bucket": {
+          "type": "string"
+        },
+        "image_data": {
+          "type": "string"
+        }
+      }
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "boolean"
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

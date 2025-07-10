@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Enhanced AI Image Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .header { background: linear-gradient(45deg, #FF6B6B, #4ECDC4); color: white; padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 20px; }
+        .upload-area { border: 2px dashed #ddd; padding: 40px; text-align: center; border-radius: 10px; cursor: pointer; }
+        .upload-area:hover { border-color: #4ECDC4; background: #f8f9fa; }
+        .btn { background: #4ECDC4; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .btn:disabled { opacity: 0.5; }
+        .result { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .hidden { display: none; }
+        .loading { text-align: center; padding: 20px; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #4ECDC4; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Test - Enhanced AI Image Analyzer</h1>
+            <p>Simple test interface</p>
+        </div>
+        
+        <div class="upload-area" id="uploadArea">
+            <div style="font-size: 3em; margin-bottom: 10px;">📁</div>
+            <p>Click here to upload an image</p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <button class="btn" id="analyzeBtn" disabled>🔍 Analyze Image</button>
+        <button class="btn" onclick="testAPI()">🧪 Test API</button>
+        
+        <div id="imagePreview" class="hidden">
+            <h3>Image Preview:</h3>
+            <img id="previewImg" style="max-width: 100%; max-height: 300px; border-radius: 5px;">
+        </div>
+        
+        <div id="loadingSection" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Analyzing image...</p>
+        </div>
+        
+        <div id="resultsSection" class="hidden">
+            <h3>Analysis Results:</h3>
+            <div id="resultsContent" class="result"></div>
+        </div>
+        
+        <div id="statusSection" class="result">
+            <h3>Status:</h3>
+            <div id="statusContent">Ready to test</div>
+        </div>
+    </div>
+
+    <script>
+        const API_ENDPOINT = 'https://cuwg234q8g.execute-api.ap-southeast-1.amazonaws.com/prod/analyze';
+        const BUCKET_NAME = 'image-analyzer-workshop-1751722329';
+        
+        let currentImageData = null;
+        
+        // Setup event listeners
+        document.getElementById('uploadArea').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+        
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImageData = e.target.result;
+                    document.getElementById('previewImg').src = currentImageData;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                    document.getElementById('analyzeBtn').disabled = false;
+                    updateStatus('✅ Image loaded successfully');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        document.getElementById('analyzeBtn').addEventListener('click', analyzeImage);
+        
+        async function testAPI() {
+            updateStatus('🧪 Testing API connection...');
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'OPTIONS',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    updateStatus('✅ API is online and accessible');
+                } else {
+                    updateStatus('⚠️ API responded but with status: ' + response.status);
+                }
+            } catch (error) {
+                updateStatus('❌ API connection failed: ' + error.message);
+            }
+        }
+        
+        async function analyzeImage() {
+            if (!currentImageData) {
+                updateStatus('❌ Please upload an image first');
+                return;
+            }
+            
+            document.getElementById('loadingSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            updateStatus('🔄 Analyzing image...');
+            
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bucket: BUCKET_NAME,
+                        image_data: currentImageData.split(',')[1]
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('resultsSection').classList.remove('hidden');
+                document.getElementById('resultsContent').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+                updateStatus('✅ Analysis completed successfully!');
+                
+            } catch (error) {
+                document.getElementById('loadingSection').classList.add('hidden');
+                updateStatus('❌ Analysis failed: ' + error.message);
+                
+                // Show demo result
+                document.getElementById('resultsSection').classList.remove('hidden');
+                document.getElementById('resultsContent').innerHTML = 
+                    '<p><strong>Demo Result:</strong></p>' +
+                    '<p>API call failed, but this shows the interface is working.</p>' +
+                    '<p>Error: ' + error.message + '</p>';
+            }
+        }
+        
+        function updateStatus(message) {
+            document.getElementById('statusContent').innerHTML = message;
+            console.log('Status:', message);
+        }
+        
+        // Test API on load
+        window.addEventListener('load', function() {
+            updateStatus('🚀 Test interface loaded');
+            setTimeout(testAPI, 1000);
+        });
+    </script>
+</body>
+</html>
