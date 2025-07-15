@@ -69,6 +69,10 @@ ColorLab tích hợp các công nghệ toán học và thuật toán tiên tiế
 
 ColorLab triển khai kiến trúc serverless hiện đại tận dụng các dịch vụ AWS cloud để cung cấp khả năng phân tích màu sắc có thể mở rộng, hiệu quả về chi phí và có tính khả dụng cao. Giải pháp tuân theo các nguyên tắc thiết kế cloud-native với kiến trúc microservices, xử lý hướng sự kiện và khả năng auto-scaling.
 
+![ColorLab Architecture Diagram](architecture-diagram.jpg)
+
+*Sơ đồ kiến trúc AWS Serverless của ColorLab - Region: ap-southeast-1 (Singapore)*
+
 ### 🛠️ **Dịch Vụ AWS Được Sử Dụng**
 
 #### **AWS Lambda**
